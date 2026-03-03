@@ -1,0 +1,136 @@
+---
+
+---
+
+<div class="details-container">
+  <div class="section-heading">
+    <img
+      src="/ceremonia.svg"
+      alt=""
+      class="section-heading-icon"
+      aria-hidden="true"
+    />
+    <h2>Detalles del Evento</h2>
+  </div>
+  <p>Información útil para que disfrutes el día sin preocupaciones.</p>
+
+  <div class="details-grid">
+    <article class="detail-card">
+      <h3>
+        <img
+          src="/vestuario.svg"
+          alt=""
+          class="detail-icon"
+          aria-hidden="true"
+        />
+        <span>Dress code</span>
+      </h3>
+      <p>Semi-formal / Cóctel</p>
+    </article>
+
+    <article class="detail-card">
+      <h3>
+        <img src="/menu.svg" alt="" class="detail-icon" aria-hidden="true" />
+        <span>Menú</span>
+      </h3>
+      <p>
+        Contaremos con un menú de cinco tiempos con especialidad en la
+        gastronomía local.
+      </p>
+    </article>
+
+    <article class="detail-card">
+      <h3>
+        <img src="/carro.svg" alt="" class="detail-icon" aria-hidden="true" />
+        <span>Transporte</span>
+      </h3>
+      <p>
+        El evento se realiza en un recinto privado; por favor llegar en vehículo
+        propio o taxi. Habrá transporte disponible desde la entrada al lugar del
+        evento.
+      </p>
+    </article>
+  </div>
+</div>
+
+<style>
+  .details-container {
+    max-width: none;
+    margin: 0;
+    padding: 1.5rem;
+    background: #faf7f3;
+    border: 1px solid var(--line);
+    border-radius: 0;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .details-container h2 {
+    margin-bottom: 0.25rem;
+  }
+
+  .section-heading {
+    display: grid;
+    justify-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    width: 100%;
+  }
+
+  .section-heading-icon {
+    width: 52px;
+    height: 52px;
+    animation: icon-float 4.8s ease-in-out infinite;
+  }
+
+  .details-container > p {
+    text-align: center;
+  }
+
+  .details-grid {
+    margin-top: 1.2rem;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  @media (max-width: 960px) {
+    .details-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .detail-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    padding: 1.2rem;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .detail-card h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .detail-icon {
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+  }
+
+  .detail-card p {
+    font-size: 1.15rem;
+    margin: 0;
+  }
+
+  @keyframes icon-float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-5px);
+    }
+  }
+</style>

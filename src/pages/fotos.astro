@@ -1,0 +1,71 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import PhotoUpload from "../components/PhotoUpload.astro";
+---
+
+<BaseLayout title="Subir Fotos — Demo" skipPrivacyGate={true}>
+  <main class="fotos-main">
+    <header class="fotos-header">
+      <a href="/" class="back-link">← Volver a la invitación</a>
+      <h1>Comparte tus Fotos</h1>
+      <p class="fotos-sub">
+        Captura los momentos especiales del evento y compártelos con nosotros.
+      </p>
+      <p class="demo-banner">
+        🎭 <strong>Demo</strong> — Esta página muestra el flujo de carga de fotos
+        sin guardar nada.
+      </p>
+    </header>
+
+    <section class="fotos-section">
+      <PhotoUpload />
+    </section>
+  </main>
+</BaseLayout>
+
+<style>
+  .fotos-main {
+    min-height: 100vh;
+    padding: 2rem 1rem 3rem;
+    max-width: 760px;
+    margin-inline: auto;
+  }
+
+  .fotos-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1.2rem;
+    color: var(--primary);
+    font-size: 1.05rem;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  .fotos-sub {
+    margin-bottom: 0.75rem;
+    font-size: 1.2rem;
+  }
+
+  .demo-banner {
+    display: inline-block;
+    background: #fff8ec;
+    border: 1px solid #e5c97a;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    color: #7a5a1e;
+    margin-bottom: 0;
+  }
+
+  .fotos-section {
+    width: 100%;
+  }
+</style>

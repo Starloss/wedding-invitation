@@ -1,0 +1,150 @@
+---
+
+---
+
+<div class="song-request-container">
+  <div class="song-heading">
+    <img
+      src="/canciones.svg"
+      alt=""
+      class="song-heading-icon"
+      aria-hidden="true"
+    />
+    <h2>Lista de Canciones</h2>
+  </div>
+  <p>¿Qué canción no puede faltar en este día? Déjanos tu sugerencia.</p>
+
+  <form id="song-form" class="song-form">
+    <div class="field-row">
+      <input
+        id="song-title"
+        type="text"
+        placeholder="Nombre de la canción"
+        required
+      />
+      <input id="song-artist" type="text" placeholder="Artista (opcional)" />
+    </div>
+    <input
+      id="song-youtube"
+      type="url"
+      placeholder="Link de YouTube (opcional)"
+      inputmode="url"
+    />
+    <button type="submit" id="song-submit">Sugerir canción</button>
+  </form>
+
+  <div id="song-message" class="song-message"></div>
+</div>
+
+<style>
+  .song-request-container {
+    max-width: none;
+    margin: 0;
+    padding: 1.5rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 0;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .song-request-container h2 {
+    margin-bottom: 0.25rem;
+  }
+
+  .song-heading {
+    width: 100%;
+    display: grid;
+    justify-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+  }
+
+  .song-heading-icon {
+    width: 52px;
+    height: 52px;
+    animation: song-dance 2.2s ease-in-out infinite;
+    transform-origin: center;
+  }
+
+  .song-request-container > p {
+    text-align: center;
+  }
+
+  .song-form {
+    margin-top: 1rem;
+  }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+  }
+
+  @media (max-width: 980px) {
+    .field-row {
+      grid-template-columns: 1fr;
+      gap: 0.7rem;
+    }
+  }
+
+  .song-message {
+    margin-top: 0.8rem;
+    min-height: 1.2rem;
+    color: var(--primary);
+    font-weight: 600;
+    font-size: 1.15rem;
+  }
+
+  #song-submit {
+    display: block;
+    margin: 0.8rem auto 0;
+  }
+
+  @keyframes song-dance {
+    0%,
+    100% {
+      transform: rotate(-6deg) scale(1);
+    }
+    50% {
+      transform: rotate(6deg) scale(1.06);
+    }
+  }
+</style>
+
+<script>
+  const form = document.getElementById("song-form") as HTMLFormElement | null;
+  const titleInput = document.getElementById(
+    "song-title",
+  ) as HTMLInputElement | null;
+  const submitBtn = document.getElementById(
+    "song-submit",
+  ) as HTMLButtonElement | null;
+  const messageEl = document.getElementById(
+    "song-message",
+  ) as HTMLElement | null;
+
+  form?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const title = titleInput?.value.trim();
+    if (!title) return;
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Enviando...";
+    }
+
+    // DEMO: simulate async call
+    await new Promise((resolve) => setTimeout(resolve, 600));
+
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Sugerir canción";
+    }
+
+    if (messageEl) {
+      messageEl.textContent = `¡"${title}" fue agregada a la lista! 🎵 (Demo — no se guarda)`;
+    }
+
+    form.reset();
+  });
+</script>

@@ -1,0 +1,1727 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Countdown from "../components/Countdown.astro";
+import SongRequest from "../components/SongRequest.astro";
+import GiftInfo from "../components/GiftInfo.astro";
+import EventDetails from "../components/EventDetails.astro";
+import QRCode from "../components/QRCode.astro";
+import RSVP from "../components/RSVP.astro";
+
+// ── Demo data — no personal info ──────────────────────────────────────────────
+const eventTitle = "Boda Civil";
+const eventDateLabel = "Sábado 12 de Septiembre — 05:00 PM a 11:00 PM";
+const eventVenue = "Salón Jardín Las Magnolias";
+const eventAddress = "Urbanización Los Pinos, Calle Principal";
+const eventMapUrl = "https://maps.google.com";
+
+const formatGcal = (d: Date) =>
+  d
+    .toISOString()
+    .replace(/[-:]/g, "")
+    .replace(/\.\d{3}Z$/, "Z");
+
+const s = new Date("2026-09-12T17:00:00-04:00");
+const e = new Date("2026-09-12T23:00:00-04:00");
+const calDates = formatGcal(s) + "/" + formatGcal(e);
+const calDetails = eventDateLabel + ". Lugar: " + eventVenue + ".";
+const calLocation = eventVenue + ", " + eventAddress;
+const calParams = new URLSearchParams({
+  action: "TEMPLATE",
+  text: eventTitle,
+  dates: calDates,
+  details: calDetails,
+  location: calLocation,
+});
+const calendarEventUrl =
+  "https://calendar.google.com/calendar/render?" + calParams.toString();
+
+// Demo gallery: CSS gradient placeholders — no real photos
+const PALETTE = [
+  "#d4c5b0",
+  "#c2b89a",
+  "#b8a98c",
+  "#cfd6c2",
+  "#bcc9b0",
+  "#d6c9b6",
+  "#c8bda8",
+  "#d0d8c8",
+  "#c0b4a0",
+  "#ccd4be",
+  "#c8bba6",
+  "#d2cbbf",
+  "#bab0a2",
+  "#d8d0c4",
+  "#c4bdb0",
+  "#cac0b4",
+];
+const galleryPhotos = PALETTE.map((bg, idx) => ({
+  bg,
+  label: "Foto " + (idx + 1),
+}));
+const marqueePhotos = [...galleryPhotos, ...galleryPhotos];
+---
+
+<BaseLayout title="Invitación de Boda — Demo">
+  <main>
+    <!-- Welcome gate (music) -->
+    <section id="welcome-gate" class="welcome-gate" aria-modal="true">
+      <div class="welcome-card">
+        <h2>Bienvenido</h2>
+        <p>¿Cómo quieres ingresar a la invitación?</p>
+        <div class="welcome-actions">
+          <button id="enter-with-music" type="button" class="secondary">
+            Entrar con música
+          </button>
+          <button id="enter-without-music" type="button" class="plain">
+            Entrar sin música
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Music FAB -->
+    <button
+      id="music-fab"
+      class="music-fab"
+      type="button"
+      aria-label="Reproducir música"
+      aria-pressed="false">▶</button
+    >
+    <audio id="background-audio" loop preload="none" playsinline></audio>
+
+    <!-- Hero -->
+    <section id="portada" class="hero">
+      <div class="hero-image-placeholder">
+        <img
+          src="/hojas_portada_izquierda_superior.svg"
+          alt=""
+          class="hero-ornament hero-ornament-top"
+        />
+        <img
+          src="/hojas_portada_derecha_inferior.svg"
+          alt=""
+          class="hero-ornament hero-ornament-bottom"
+        />
+        <div class="hero-overlay">
+          <div class="hero-date-row">
+            <span class="hero-line" aria-hidden="true"></span>
+            <p class="hero-date">12.09.2026</p>
+            <span class="hero-line" aria-hidden="true"></span>
+          </div>
+          <h1 class="hero-names" aria-label="Sofía y Mateo">
+            <span class="hero-name">Sofía</span>
+            <span class="hero-amp">&</span>
+            <span class="hero-name">Mateo</span>
+          </h1>
+          <span class="hero-names-line" aria-hidden="true"></span>
+          <div class="hero-quote-wrap">
+            <img
+              src="/comilla_apertura.svg"
+              alt=""
+              class="hero-quote-mark hero-quote-open"
+            />
+            <p class="hero-quote">
+              El amor no se ve con los ojos, sino con el corazón.
+            </p>
+            <img
+              src="/comilla_cierre.svg"
+              alt=""
+              class="hero-quote-mark hero-quote-close"
+            />
+          </div>
+          <div class="hero-scroll" aria-hidden="true">
+            <img src="/flecha_continuar.svg" alt="" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- App shell -->
+    <div class="app-shell">
+      <div class="section-divider" aria-hidden="true">
+        <img src="/ondas02.svg" alt="" />
+      </div>
+
+      <!-- Countdown + ¿Quiénes están incluidos? -->
+      <section id="countdown" class="countdown-wrap reveal">
+        <div class="section-card countdown-card"><Countdown /></div>
+        <div class="section-card invited-card">
+          <h2>¿Quiénes están incluidos?</h2>
+          <div id="guest-personalization" class="guest-personalization">
+            <ul id="guest-invitees-list" class="guest-invitees-list"></ul>
+            <p id="guest-companions" class="guest-companions"></p>
+            <p id="guest-closing" class="guest-closing"></p>
+          </div>
+          <p id="guest-default" class="guest-default">
+            Ingresa tu código de invitación para ver quiénes están incluidos.
+          </p>
+        </div>
+      </section>
+
+      <!-- Evento banner + bloques -->
+      <section id="evento" class="reveal">
+        <div class="section-card section-banner">
+          <span
+            class="section-banner-cinta section-banner-cinta-left"
+            aria-hidden="true"></span>
+          <span class="section-banner-label">{eventTitle}</span>
+          <span
+            class="section-banner-cinta section-banner-cinta-right"
+            aria-hidden="true"></span>
+        </div>
+        <div class="event-block">
+          <h3>Día</h3>
+          <p>{eventDateLabel}</p>
+          <a href={calendarEventUrl} target="_blank" class="pill-btn">Agendar</a
+          >
+        </div>
+        <div class="event-block">
+          <h3>Lugar</h3>
+          <p>{eventVenue}</p>
+        </div>
+        <div class="event-block">
+          <h3>Dirección</h3>
+          <p>{eventAddress}</p>
+          <a href={eventMapUrl} target="_blank" class="pill-btn"
+            >¿Cómo llegar?</a
+          >
+        </div>
+        <div class="event-block event-actions-card">
+          <h3>Acciones de la invitación</h3>
+          <p>Selecciona una opción para continuar con tu confirmación.</p>
+          <div id="event-actions-buttons" class="event-actions-buttons">
+            <button
+              id="event-confirm-action"
+              type="button"
+              class="pill-btn action-confirm">Confirmar</button
+            >
+            <button
+              id="event-decline-action"
+              type="button"
+              class="pill-btn action-decline">No podré asistir</button
+            >
+          </div>
+          <p id="event-actions-status" class="event-actions-status" hidden></p>
+        </div>
+      </section>
+
+      <!-- RSVP -->
+      <section id="confirmacion" class="reveal" hidden>
+        <div class="section-card"><RSVP /></div>
+      </section>
+
+      <div class="section-divider" aria-hidden="true">
+        <img src="/ondas04.svg" alt="" />
+      </div>
+
+      <!-- Gallery -->
+      <section id="galeria" class="reveal">
+        <div class="section-card">
+          <h2>Retratos de Nuestro Amor</h2>
+          <div class="gallery-quote-wrap">
+            <span
+              class="gallery-quote-mark gallery-quote-open"
+              aria-hidden="true"></span>
+            <p class="gallery-quote">
+              Me has hechizado en cuerpo y alma, y te amo, te amo, te amo.
+            </p>
+            <span
+              class="gallery-quote-mark gallery-quote-close"
+              aria-hidden="true"></span>
+          </div>
+          <div class="gallery-carousel" role="list" aria-label="Galería demo">
+            <div class="gallery-track">
+              {
+                marqueePhotos.map((photo) => (
+                  <figure
+                    class="gallery-photo"
+                    role="listitem"
+                    style={`background: ${photo.bg};`}
+                  >
+                    <span class="gallery-placeholder-label">{photo.label}</span>
+                  </figure>
+                ))
+              }
+            </div>
+          </div>
+          <p class="gallery-demo-note">
+            🎭 Demo — las fotos reales se mostrarían aquí
+          </p>
+        </div>
+      </section>
+
+      <section id="event-details" class="reveal"><EventDetails /></section>
+      <section id="songs" class="reveal"><SongRequest /></section>
+
+      <section id="photos" class="reveal">
+        <div class="section-card photos-section"><QRCode /></div>
+      </section>
+
+      <div class="section-divider section-divider-alt" aria-hidden="true">
+        <img src="/ondas05.svg" alt="" />
+      </div>
+
+      <section id="gifts" class="reveal"><GiftInfo /></section>
+
+      <div class="section-divider section-divider-alt" aria-hidden="true">
+        <img src="/lineas.svg" alt="" />
+      </div>
+
+      <!-- Final -->
+      <section id="final" class="reveal">
+        <div class="section-card final-actions">
+          <div class="final-icons" aria-hidden="true">
+            <img
+              class="final-cinta final-cinta-left"
+              src="/cinta_izquierda.svg"
+              alt=""
+            />
+            <img class="final-heart" src="/corazon.svg" alt="" />
+            <img
+              class="final-cinta final-cinta-right"
+              src="/cinta_derecha.svg"
+              alt=""
+            />
+          </div>
+          <h2>Sofía &amp; Mateo</h2>
+          <p>
+            Gracias por acompañarnos en este capítulo tan importante de nuestra
+            historia.
+          </p>
+        </div>
+      </section>
+    </div>
+  </main>
+</BaseLayout>
+
+<style>
+  main {
+    padding: 0;
+    background: transparent;
+    position: relative;
+    overflow-x: clip;
+    width: 100%;
+  }
+
+  :global(html),
+  :global(body) {
+    overflow-x: hidden;
+    width: 100%;
+  }
+
+  /* ── App shell ─────────────────────────────────────────── */
+  .app-shell {
+    position: relative;
+    z-index: 4;
+    margin-top: 100vh;
+    margin-top: 100svh;
+    background: var(--bg);
+    padding: 1.35rem 0 2.8rem;
+    display: grid;
+    gap: 1.1rem;
+    box-shadow: 0 -14px 30px rgba(56, 40, 28, 0.12);
+  }
+
+  .app-shell > section,
+  .app-shell > .section-divider {
+    width: 100%;
+    max-width: 1120px;
+    margin-inline: auto;
+    min-width: 0;
+  }
+
+  .app-shell,
+  .app-shell * {
+    min-width: 0;
+  }
+
+  /* ── Reveal animation ──────────────────────────────────── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition:
+      opacity 0.65s ease,
+      transform 0.65s ease;
+  }
+  .reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ── Section card ──────────────────────────────────────── */
+  .section-card {
+    background: var(--surface);
+    border-radius: 0;
+    border: 1px solid var(--line);
+    padding: 1.6rem 1.45rem;
+    box-shadow: var(--shadow-sm);
+    max-width: 100%;
+  }
+
+  .photos-section {
+    display: grid;
+    gap: 1rem;
+  }
+
+  /* ── Hero ──────────────────────────────────────────────── */
+  .hero {
+    padding: 0;
+    margin: 0;
+  }
+
+  #portada {
+    padding: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    height: 100svh;
+    z-index: 0;
+  }
+
+  .hero-image-placeholder {
+    min-height: 100vh;
+    min-height: 100svh;
+    height: 100vh;
+    height: 100svh;
+    border-radius: 0;
+    background:
+      linear-gradient(180deg, rgba(66, 49, 39, 0.22), rgba(66, 49, 39, 0.62)),
+      linear-gradient(135deg, #8f9b7a, #7f5d49);
+    background-position: center;
+    background-size: cover;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    border: none;
+    box-shadow: var(--shadow-md);
+  }
+
+  .hero-ornament {
+    position: absolute;
+    pointer-events: none;
+    opacity: 0.85;
+    z-index: 1;
+    transform-origin: center;
+    will-change: transform;
+  }
+
+  .hero-ornament-top {
+    top: -28px;
+    left: -34px;
+    width: min(195px, 34vw);
+    animation:
+      ornament-enter-top 1.85s cubic-bezier(0.22, 1, 0.36, 1) both,
+      ornament-float-top 8.4s ease-in-out 1.9s infinite;
+  }
+
+  .hero-ornament-bottom {
+    right: -32px;
+    bottom: -28px;
+    width: min(176px, 33vw);
+    animation:
+      ornament-enter-bottom 1.85s cubic-bezier(0.22, 1, 0.36, 1) both,
+      ornament-float-bottom 9.2s ease-in-out 1.9s infinite;
+  }
+
+  .hero-overlay {
+    text-align: center;
+    color: #fff;
+    width: min(620px, 92vw);
+    min-height: 100%;
+    padding: 4.3rem 1.3rem 1rem;
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .hero-date-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .hero-line {
+    width: clamp(54px, 17vw, 86px);
+    height: 1px;
+    background: rgba(242, 245, 247, 0.72);
+    display: inline-block;
+  }
+
+  .hero-date {
+    letter-spacing: 0.09em;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    opacity: 0.94;
+    color: #f2f5f7;
+    margin: 0;
+  }
+
+  .hero-names {
+    margin: 0.1rem 0 0.5rem;
+    color: #fff;
+    line-height: 1.02;
+    letter-spacing: 0.01em;
+    text-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+    display: grid;
+    justify-items: center;
+    gap: 0.22rem;
+  }
+
+  .hero-name {
+    display: block;
+    font-size: clamp(2.95rem, 10.8vw, 4.5rem);
+    font-weight: 400;
+    font-family: var(--font-script);
+    line-height: 0.95;
+  }
+
+  .hero-amp {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid rgba(214, 228, 215, 0.95);
+    background: rgba(232, 239, 227, 0.88);
+    color: #597050;
+    display: grid;
+    place-items: center;
+    font-size: 1.8rem;
+    font-weight: 700;
+    text-shadow: none;
+  }
+
+  .hero-names-line {
+    width: min(300px, 76vw);
+    height: 1px;
+    background: rgba(242, 245, 247, 0.72);
+    margin: 0 auto 0.95rem;
+    display: block;
+  }
+
+  .hero-quote-wrap {
+    display: grid;
+    justify-items: center;
+    gap: 0.2rem;
+  }
+
+  .hero-quote {
+    max-width: 500px;
+    margin: 0;
+    color: #f4f6f7;
+    font-size: 1.03rem;
+    line-height: 1.35;
+  }
+
+  .hero-quote-mark {
+    width: 18px;
+    height: 18px;
+    opacity: 0.95;
+    will-change: transform;
+  }
+
+  .hero-quote-open {
+    margin-bottom: 0.15rem;
+    animation: quote-mark-drift 3.6s ease-in-out infinite;
+  }
+
+  .hero-quote-close {
+    margin-top: 0.15rem;
+    animation: quote-mark-drift 3.6s ease-in-out infinite reverse;
+  }
+
+  .hero-scroll {
+    position: absolute;
+    left: 50%;
+    bottom: 0.65rem;
+    transform: translateX(-50%);
+    display: grid;
+    justify-items: center;
+    animation: bounce 2.2s infinite;
+  }
+
+  .hero-scroll img {
+    width: 24px;
+    height: 24px;
+    opacity: 0.92;
+  }
+
+  /* ── Welcome gate ──────────────────────────────────────── */
+  .welcome-gate {
+    position: fixed;
+    inset: 0;
+    z-index: 140;
+    background: rgba(37, 28, 22, 0.56);
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+  }
+
+  .welcome-gate[hidden] {
+    display: none;
+  }
+
+  .welcome-card {
+    width: min(460px, 92vw);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow-md);
+    padding: 1.3rem 1.1rem;
+    text-align: center;
+  }
+
+  .welcome-card h2 {
+    margin-bottom: 0.3rem;
+  }
+  .welcome-card p {
+    margin-bottom: 0.9rem;
+  }
+
+  .welcome-actions {
+    display: grid;
+    gap: 0.55rem;
+  }
+  .welcome-actions .secondary {
+    background: transparent;
+    color: var(--primary);
+    border: 1px solid var(--primary);
+  }
+  .welcome-actions .plain {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--line);
+  }
+
+  /* ── Countdown section ─────────────────────────────────── */
+  .countdown-wrap {
+    display: grid;
+    gap: 1rem;
+  }
+  .countdown-card,
+  .invited-card {
+    display: flex;
+    flex-direction: column;
+  }
+  .invited-card {
+    text-align: center;
+  }
+  .invited-card h2 {
+    margin-bottom: 0.35rem;
+  }
+
+  .guest-personalization {
+    display: none;
+  }
+  .guest-default {
+    font-size: 1.1rem;
+    color: var(--muted);
+  }
+
+  .guest-invitees-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 0.38rem;
+  }
+
+  :global(.guest-invitee-name) {
+    font-size: clamp(2rem, 3.1vw, 2.55rem);
+    color: var(--primary);
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    line-height: 1.1;
+  }
+
+  .guest-companions,
+  .guest-closing {
+    margin: 0.45rem 0 0;
+    font-size: 1.22rem;
+  }
+
+  /* ── Event section ─────────────────────────────────────── */
+  #evento {
+    display: grid;
+    gap: 0.95rem;
+  }
+
+  .pill-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 170px;
+    max-width: 100%;
+    padding: 0.74rem 1.35rem;
+    border-radius: 999px;
+    background: #f7efe4;
+    border: 1px solid var(--line);
+    text-decoration: none;
+    color: #5a4b42;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    font-size: 1.15rem;
+  }
+
+  .pill-btn:hover {
+    transform: translateY(-2px);
+    background: #efe2d2;
+    border-color: #d6c0a6;
+  }
+
+  .section-banner {
+    width: fit-content;
+    min-width: min(100%, 360px);
+    margin: 0 auto 1.05rem;
+    background: var(--primary);
+    color: #ffffff;
+    font-size: clamp(2.2rem, 3.9vw, 3.1rem);
+    line-height: 1;
+    padding: 0.72rem 2.2rem;
+    border-radius: 0;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: visible;
+    box-shadow:
+      0 12px 22px rgba(46, 61, 40, 0.16),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+  }
+
+  .section-banner-label {
+    display: inline-block;
+    transform: translateY(-1px);
+  }
+
+  .section-banner-cinta {
+    width: 44px;
+    height: 44px;
+    opacity: 0.95;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--primary);
+    -webkit-mask-position: center;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-size: contain;
+    mask-position: center;
+    mask-repeat: no-repeat;
+    mask-size: contain;
+  }
+
+  .section-banner-cinta-left {
+    left: -30px;
+    -webkit-mask-image: url("/cinta_izquierda.svg");
+    mask-image: url("/cinta_izquierda.svg");
+  }
+
+  .section-banner-cinta-right {
+    right: -30px;
+    -webkit-mask-image: url("/cinta_derecha.svg");
+    mask-image: url("/cinta_derecha.svg");
+  }
+
+  .event-block {
+    background: var(--surface);
+    border-radius: 0;
+    border: 1px solid var(--line);
+    padding: 1.35rem 1.15rem;
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+    max-width: 100%;
+  }
+
+  .event-block .pill-btn {
+    margin-inline: auto;
+  }
+  .event-block h3 {
+    font-size: 1.38rem;
+    margin-bottom: 0.35rem;
+  }
+  .event-block p {
+    margin-bottom: 0.7rem;
+  }
+
+  .event-actions-card {
+    display: grid;
+    gap: 0.7rem;
+  }
+
+  .event-actions-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+    width: 100%;
+  }
+
+  .event-actions-buttons[hidden] {
+    display: none !important;
+  }
+
+  .event-actions-buttons .pill-btn {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .action-confirm {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+  }
+  .action-confirm:hover {
+    background: #5f7556;
+    border-color: #5f7556;
+  }
+
+  .action-decline {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: #fff;
+  }
+  .action-decline:hover {
+    background: #a54242;
+  }
+
+  .event-actions-status {
+    margin: 0;
+    padding: 0.72rem 0.9rem;
+    border: 1px solid var(--line);
+    font-weight: 600;
+  }
+  .event-actions-status[hidden] {
+    display: none !important;
+  }
+  .event-actions-status.is-confirmed {
+    background: var(--primary-soft);
+    color: var(--primary);
+    border-color: var(--primary);
+  }
+  .event-actions-status.is-declined {
+    background: #f8eaea;
+    color: var(--danger);
+    border-color: var(--danger);
+  }
+
+  /* ── Gallery ───────────────────────────────────────────── */
+  .gallery-carousel {
+    margin-top: 0.95rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border: 1px solid #e7d9c8;
+    background: #f7eee3;
+    padding: 0.75rem;
+    max-width: 100%;
+    cursor: grab;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .gallery-carousel::-webkit-scrollbar {
+    display: none;
+  }
+  .gallery-carousel.is-dragging {
+    cursor: grabbing;
+  }
+
+  .gallery-quote-wrap {
+    display: grid;
+    justify-items: center;
+    gap: 0.18rem;
+    margin-top: 0.15rem;
+  }
+  .gallery-quote {
+    margin: 0;
+    text-align: center;
+  }
+
+  .gallery-quote-mark {
+    width: 16px;
+    height: 16px;
+    opacity: 0.95;
+    display: block;
+    background: var(--primary);
+    -webkit-mask-position: center;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-size: contain;
+    mask-position: center;
+    mask-repeat: no-repeat;
+    mask-size: contain;
+    will-change: transform;
+  }
+  .gallery-quote-open {
+    -webkit-mask-image: url("/comilla_apertura.svg");
+    mask-image: url("/comilla_apertura.svg");
+    animation: quote-mark-drift 3.6s ease-in-out infinite;
+  }
+  .gallery-quote-close {
+    -webkit-mask-image: url("/comilla_cierre.svg");
+    mask-image: url("/comilla_cierre.svg");
+    animation: quote-mark-drift 3.6s ease-in-out infinite reverse;
+  }
+
+  .gallery-track {
+    display: flex;
+    width: max-content;
+    gap: 0.85rem;
+    will-change: transform;
+  }
+
+  .gallery-photo {
+    width: min(320px, 58vw);
+    max-width: 90vw;
+    min-height: 370px;
+    border-radius: 0;
+    border: 1px solid #e7d9c8;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .gallery-placeholder-label {
+    color: rgba(80, 60, 45, 0.35);
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    user-select: none;
+  }
+
+  .gallery-demo-note {
+    text-align: center;
+    font-size: 0.95rem;
+    color: var(--muted);
+    margin-top: 0.65rem;
+    margin-bottom: 0;
+  }
+
+  /* ── Music FAB ─────────────────────────────────────────── */
+  .music-fab {
+    position: fixed;
+    right: max(14px, env(safe-area-inset-right));
+    bottom: max(16px, env(safe-area-inset-bottom));
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    border: 1px solid #d6c4b2;
+    background: rgba(252, 245, 236, 0.95);
+    font-size: 1.15rem;
+    z-index: 60;
+    color: var(--primary);
+    box-shadow: 0 12px 25px rgba(75, 58, 44, 0.2);
+    display: grid;
+    place-items: center;
+    padding: 0;
+    line-height: 0;
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
+    transition: transform 0.24s ease;
+  }
+  .music-fab:focus-visible {
+    box-shadow:
+      0 0 0 3px rgba(111, 135, 101, 0.28),
+      0 12px 25px rgba(75, 58, 44, 0.2);
+  }
+  .music-fab.is-playing {
+    animation: pulse 1.4s infinite;
+  }
+
+  .music-fab-icon {
+    width: 36px;
+    height: 36px;
+    display: block;
+    object-fit: contain;
+  }
+  .music-fab-icon.is-play {
+    transform: translateX(1.5px);
+  }
+
+  /* ── Final section ─────────────────────────────────────── */
+  .final-actions {
+    text-align: center;
+    display: grid;
+    gap: 0.7rem;
+    justify-items: center;
+  }
+  .final-actions p {
+    margin-bottom: 0.2rem;
+    max-width: 500px;
+  }
+
+  .final-icons {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.85rem;
+    margin-bottom: 0.25rem;
+  }
+  .final-heart {
+    width: 34px;
+    height: 34px;
+    animation: heart-beat 2.2s ease-in-out infinite;
+  }
+  .final-cinta {
+    width: 28px;
+    height: 28px;
+    opacity: 0.72;
+  }
+  .final-cinta-left {
+    animation: tape-sway-left 4.8s ease-in-out infinite;
+  }
+  .final-cinta-right {
+    animation: tape-sway-right 4.8s ease-in-out infinite;
+  }
+
+  /* ── Section dividers ──────────────────────────────────── */
+  .section-divider {
+    width: 100%;
+    line-height: 0;
+    background: var(--bg);
+    margin-block: 0.1rem;
+  }
+  .section-divider img {
+    width: 100%;
+    height: 34px;
+    object-fit: cover;
+    display: block;
+    opacity: 0.9;
+    will-change: transform;
+    animation: divider-wave 7.2s ease-in-out infinite;
+  }
+  .section-divider-alt img {
+    height: 28px;
+    opacity: 0.7;
+  }
+
+  section.reveal {
+    padding: 0.55rem 0;
+  }
+
+  #countdown,
+  #evento,
+  #galeria,
+  #event-details,
+  #songs,
+  #gifts,
+  #final {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  :global(.details-container),
+  :global(.song-request-container),
+  :global(.gift-container),
+  :global(.countdown-container) {
+    margin: 0;
+    max-width: none;
+    border-radius: 0;
+    background: var(--surface);
+    padding: 1.9rem 1.55rem;
+  }
+
+  :global(.detail-card),
+  :global(.song-item),
+  :global(.gift-card),
+  :global(#guest-info) {
+    border-radius: 0;
+    background: var(--surface);
+    padding: 1.2rem;
+  }
+
+  /* ── Keyframes ─────────────────────────────────────────── */
+  @keyframes bounce {
+    0%,
+    100% {
+      transform: translateX(-50%) translateY(0);
+    }
+    50% {
+      transform: translateX(-50%) translateY(6px);
+    }
+  }
+  @keyframes ornament-float-top {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0) rotate(0deg);
+    }
+    50% {
+      transform: translate3d(0, 6px, 0) rotate(-2deg);
+    }
+  }
+  @keyframes ornament-enter-top {
+    from {
+      opacity: 0;
+      transform: translate3d(-26px, -26px, 0) scale(0.82) rotate(-10deg);
+    }
+    to {
+      opacity: 0.85;
+      transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+    }
+  }
+  @keyframes ornament-float-bottom {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0) rotate(0deg);
+    }
+    50% {
+      transform: translate3d(0, -6px, 0) rotate(2deg);
+    }
+  }
+  @keyframes ornament-enter-bottom {
+    from {
+      opacity: 0;
+      transform: translate3d(26px, 26px, 0) scale(0.82) rotate(10deg);
+    }
+    to {
+      opacity: 0.85;
+      transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+    }
+  }
+  @keyframes quote-mark-drift {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-2px);
+    }
+  }
+  @keyframes divider-wave {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    50% {
+      transform: translateX(-10px);
+    }
+  }
+  @keyframes heart-beat {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    30% {
+      transform: scale(1.1);
+    }
+    55% {
+      transform: scale(0.96);
+    }
+  }
+  @keyframes tape-sway-left {
+    0%,
+    100% {
+      transform: rotate(0deg);
+    }
+    50% {
+      transform: rotate(-8deg);
+    }
+  }
+  @keyframes tape-sway-right {
+    0%,
+    100% {
+      transform: rotate(0deg);
+    }
+    50% {
+      transform: rotate(8deg);
+    }
+  }
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(55, 95, 143, 0.32);
+    }
+    100% {
+      box-shadow: 0 0 0 14px rgba(55, 95, 143, 0);
+    }
+  }
+
+  /* ── Media queries ─────────────────────────────────────── */
+  @media (max-width: 1024px) {
+    .countdown-wrap {
+      grid-template-columns: 1fr;
+      gap: 0.8rem;
+    }
+    .app-shell {
+      padding-top: 1rem;
+      gap: 0.95rem;
+    }
+    #countdown,
+    #evento,
+    #galeria,
+    #event-details,
+    #confirmacion,
+    #songs,
+    #gifts,
+    #final {
+      padding-left: 1.1rem;
+      padding-right: 1.1rem;
+    }
+    .section-card {
+      padding: 1.35rem 1.15rem;
+    }
+    .event-block {
+      padding: 1.1rem 1rem;
+    }
+    .gallery-photo {
+      width: min(260px, 62vw);
+      min-height: 320px;
+    }
+  }
+
+  @media (min-width: 960px) {
+    .countdown-wrap {
+      grid-template-columns: 1.25fr 1fr;
+      align-items: stretch;
+    }
+    .countdown-card,
+    .invited-card {
+      height: 100%;
+    }
+    #countdown,
+    #evento,
+    #galeria,
+    #event-details,
+    #songs,
+    #gifts,
+    #final {
+      padding-left: 2.3rem;
+      padding-right: 2.3rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .hero-image-placeholder {
+      min-height: 100vh;
+      min-height: 100svh;
+      height: 100vh;
+      height: 100svh;
+      border-radius: 0;
+    }
+    .hero-overlay {
+      width: min(420px, 88vw);
+      padding: 4.9rem 1rem 0.9rem;
+    }
+    .hero-ornament-top {
+      top: -24px;
+      left: -28px;
+      width: min(152px, 37vw);
+    }
+    .hero-ornament-bottom {
+      right: -26px;
+      bottom: -24px;
+      width: min(138px, 35vw);
+    }
+    .section-banner {
+      font-size: clamp(1.9rem, 9.2vw, 2.5rem);
+      padding: 0.62rem 1.45rem;
+    }
+    .section-banner-cinta {
+      width: 34px;
+      height: 34px;
+    }
+    .section-banner-cinta-left {
+      left: -22px;
+    }
+    .section-banner-cinta-right {
+      right: -22px;
+    }
+    .hero-name {
+      font-size: clamp(2.8rem, 14.2vw, 4.2rem);
+    }
+    .hero-amp {
+      width: 48px;
+      height: 48px;
+      font-size: 1.7rem;
+    }
+    .hero-names-line {
+      width: min(286px, 82vw);
+      margin-bottom: 0.75rem;
+    }
+    .hero-quote {
+      font-size: 0.94rem;
+      max-width: 330px;
+      line-height: 1.3;
+    }
+    .hero-quote-mark {
+      width: 16px;
+      height: 16px;
+    }
+    .hero-scroll {
+      bottom: 0.45rem;
+    }
+    .hero-scroll img {
+      width: 20px;
+      height: 20px;
+    }
+    .section-card {
+      border-radius: 0;
+      padding: 1.3rem 1rem;
+    }
+    .event-block {
+      padding: 1rem;
+    }
+    .pill-btn {
+      min-width: 0;
+      width: min(100%, 280px);
+      margin-inline: auto;
+    }
+    .gallery-carousel {
+      padding: 0.55rem;
+    }
+    .gallery-track {
+      gap: 0.55rem;
+    }
+    .gallery-photo {
+      width: min(220px, 70vw);
+      min-height: 250px;
+    }
+    .section-divider img {
+      height: 22px;
+    }
+    section.reveal {
+      padding: 0.42rem 0;
+    }
+    #countdown,
+    #evento,
+    #galeria,
+    #event-details,
+    #songs,
+    #gifts,
+    #final {
+      padding-left: 0.5rem;
+      padding-right: 0.5rem;
+    }
+    :global(.details-container),
+    :global(.song-request-container),
+    :global(.gift-container),
+    :global(.countdown-container) {
+      padding: 1.35rem 1.05rem;
+    }
+    .music-fab {
+      width: 54px;
+      height: 54px;
+      right: 12px;
+      bottom: 12px;
+    }
+  }
+
+  @media (max-width: 420px) {
+    .app-shell {
+      padding-bottom: 2rem;
+    }
+    .hero-overlay {
+      width: min(360px, 92vw);
+      padding: 4.2rem 0.8rem 0.9rem;
+    }
+    .hero-name {
+      font-size: clamp(2.35rem, 14vw, 3.2rem);
+    }
+    .hero-quote {
+      font-size: 1rem;
+      max-width: 300px;
+    }
+    .hero-line {
+      width: clamp(42px, 15vw, 66px);
+    }
+    .section-banner {
+      font-size: 1.75rem;
+      padding: 0.58rem 1.15rem;
+    }
+    .event-block h3 {
+      font-size: 1.22rem;
+    }
+    .event-block p {
+      font-size: 1.14rem;
+    }
+    .event-actions-buttons {
+      grid-template-columns: 1fr;
+    }
+    .gallery-photo {
+      width: min(200px, 68vw);
+      min-height: 220px;
+    }
+    :global(.details-container),
+    :global(.song-request-container),
+    :global(.gift-container),
+    :global(.countdown-container) {
+      padding: 1.15rem 0.85rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-ornament-top,
+    .hero-ornament-bottom,
+    .hero-quote-open,
+    .hero-quote-close,
+    .section-divider img,
+    .final-heart,
+    .final-cinta-left,
+    .final-cinta-right,
+    .hero-scroll,
+    .music-fab.is-playing {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  import { validateRSVPToken } from "../lib/rsvp";
+
+  // ── DOM refs ──────────────────────────────────────────────────────────────
+  const guestPersonalization = document.getElementById(
+    "guest-personalization",
+  ) as HTMLElement | null;
+  const guestInviteesList = document.getElementById(
+    "guest-invitees-list",
+  ) as HTMLElement | null;
+  const guestCompanions = document.getElementById(
+    "guest-companions",
+  ) as HTMLElement | null;
+  const guestClosing = document.getElementById(
+    "guest-closing",
+  ) as HTMLElement | null;
+  const guestDefault = document.getElementById(
+    "guest-default",
+  ) as HTMLElement | null;
+  const revealItems = document.querySelectorAll(".reveal");
+  const musicFab = document.getElementById(
+    "music-fab",
+  ) as HTMLButtonElement | null;
+  const welcomeGate = document.getElementById(
+    "welcome-gate",
+  ) as HTMLElement | null;
+  const enterWithMusicBtn = document.getElementById(
+    "enter-with-music",
+  ) as HTMLButtonElement | null;
+  const enterWithoutMusicBtn = document.getElementById(
+    "enter-without-music",
+  ) as HTMLButtonElement | null;
+  const backgroundAudio = document.getElementById(
+    "background-audio",
+  ) as HTMLAudioElement | null;
+  const eventConfirmBtn = document.getElementById(
+    "event-confirm-action",
+  ) as HTMLButtonElement | null;
+  const eventDeclineBtn = document.getElementById(
+    "event-decline-action",
+  ) as HTMLButtonElement | null;
+  const eventActionsButtons = document.getElementById(
+    "event-actions-buttons",
+  ) as HTMLElement | null;
+  const eventActionsStatus = document.getElementById(
+    "event-actions-status",
+  ) as HTMLElement | null;
+  const confirmationSection = document.getElementById(
+    "confirmacion",
+  ) as HTMLElement | null;
+
+  if (backgroundAudio) {
+    backgroundAudio.volume = 0.42;
+    backgroundAudio.loop = true;
+  }
+  if (!window.location.hash)
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+
+  // ── Types ─────────────────────────────────────────────────────────────────
+  type Invitee = { firstName?: string; lastName?: string; fullName?: string };
+  type GuestData = {
+    name?: string;
+    maxGuests?: number;
+    invitees?: Invitee[];
+    status?: "pending" | "confirmed" | "declined";
+  };
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  function showConfirmationSection() {
+    if (!confirmationSection) return;
+    confirmationSection.hidden = false;
+    confirmationSection.classList.add("is-visible");
+  }
+
+  function hideConfirmationSection() {
+    if (!confirmationSection) return;
+    confirmationSection.hidden = true;
+  }
+
+  function setActionStatus(status?: "pending" | "confirmed" | "declined") {
+    if (!eventActionsButtons || !eventActionsStatus) return;
+    eventActionsStatus.classList.remove("is-confirmed", "is-declined");
+    if (status === "confirmed") {
+      eventActionsButtons.hidden = true;
+      eventActionsStatus.hidden = false;
+      eventActionsStatus.classList.add("is-confirmed");
+      eventActionsStatus.textContent = "Invitación Confirmada";
+      hideConfirmationSection();
+      return;
+    }
+    if (status === "declined") {
+      eventActionsButtons.hidden = true;
+      eventActionsStatus.hidden = false;
+      eventActionsStatus.classList.add("is-declined");
+      eventActionsStatus.textContent = "Has confirmado que no podrás asistir.";
+      hideConfirmationSection();
+      return;
+    }
+    eventActionsButtons.hidden = false;
+    eventActionsStatus.hidden = true;
+    eventActionsStatus.textContent = "";
+  }
+
+  function normalizeNames(guest: GuestData): string[] {
+    if (Array.isArray(guest.invitees) && guest.invitees.length > 0) {
+      const names = guest.invitees
+        .map(
+          (p) =>
+            p.fullName?.trim() ||
+            `${p.firstName ?? ""} ${p.lastName ?? ""}`.trim(),
+        )
+        .filter(Boolean);
+      if (names.length) return names;
+    }
+    return [(guest.name || "Invitado").trim() || "Invitado"];
+  }
+
+  function applyGuestData(guest: GuestData) {
+    if (
+      !guestPersonalization ||
+      !guestInviteesList ||
+      !guestCompanions ||
+      !guestClosing
+    )
+      return;
+    const names = normalizeNames(guest);
+    const maxGuests = Math.max(1, Number(guest.maxGuests) || names.length || 1);
+    const companions = Math.max(0, maxGuests - names.length);
+    const total = names.length + companions;
+    guestInviteesList.innerHTML = "";
+    names.forEach((name) => {
+      const li = document.createElement("li");
+      li.className = "guest-invitee-name";
+      li.textContent = name;
+      guestInviteesList.appendChild(li);
+    });
+    guestCompanions.textContent =
+      companions > 0
+        ? `${companions} Acompañante${companions > 1 ? "s" : ""}`
+        : "";
+    guestCompanions.style.display = companions > 0 ? "block" : "none";
+    guestClosing.textContent = `Nos encanta compartir este momento ${total > 1 ? "con ustedes" : "contigo"}.`;
+    guestPersonalization.style.display = "block";
+    if (guestDefault) guestDefault.style.display = "none";
+  }
+
+  async function hydrateGuest() {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("codigo")?.trim() || params.get("token")?.trim();
+    if (!token) return;
+    try {
+      const guest = await validateRSVPToken(token);
+      if (guest) {
+        applyGuestData(guest);
+        setActionStatus(guest.status);
+      }
+    } catch {}
+  }
+
+  // ── Reveal on scroll ──────────────────────────────────────────────────────
+  function initReveal() {
+    const obs = new IntersectionObserver(
+      (entries) =>
+        entries.forEach((e) => {
+          if (e.isIntersecting) e.target.classList.add("is-visible");
+        }),
+      { threshold: 0.15 },
+    );
+    revealItems.forEach((el) => obs.observe(el));
+  }
+
+  // ── Music FAB ─────────────────────────────────────────────────────────────
+  function initMusicFab() {
+    if (!musicFab || !backgroundAudio || !welcomeGate) return;
+
+    const renderIcon = (mode: "play" | "pause") => {
+      const src = mode === "pause" ? "/pause.svg" : "/play.svg";
+      const cls = mode === "pause" ? "is-pause" : "is-play";
+      musicFab.innerHTML = `<img class="music-fab-icon ${cls}" src="${src}" alt="" aria-hidden="true" />`;
+    };
+
+    const setPaused = () => {
+      renderIcon("play");
+      musicFab.classList.remove("is-playing");
+      musicFab.setAttribute("aria-pressed", "false");
+    };
+    const setPlaying = () => {
+      renderIcon("pause");
+      musicFab.classList.add("is-playing");
+      musicFab.setAttribute("aria-pressed", "true");
+    };
+
+    setPaused();
+
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+
+    const openPage = async (withMusic: boolean) => {
+      if (withMusic) {
+        try {
+          backgroundAudio.muted = false;
+          await backgroundAudio.play();
+          setPlaying();
+        } catch {
+          setPaused();
+        }
+      } else {
+        backgroundAudio.pause();
+        setPaused();
+      }
+      welcomeGate.hidden = true;
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
+    };
+
+    enterWithMusicBtn?.addEventListener("click", () => openPage(true));
+    enterWithoutMusicBtn?.addEventListener("click", () => openPage(false));
+
+    musicFab.addEventListener("click", async () => {
+      if (backgroundAudio.paused) {
+        try {
+          await backgroundAudio.play();
+          setPlaying();
+        } catch {
+          setPaused();
+        }
+      } else {
+        backgroundAudio.pause();
+        setPaused();
+      }
+    });
+  }
+
+  // ── Gallery drag-scroll ───────────────────────────────────────────────────
+  function initGalleryDrag() {
+    const carousel = document.querySelector(
+      ".gallery-carousel",
+    ) as HTMLElement | null;
+    const track = carousel?.querySelector(
+      ".gallery-track",
+    ) as HTMLElement | null;
+    if (!carousel || !track) return;
+
+    let isDragging = false,
+      startX = 0,
+      initScroll = 0;
+    let autoFrame = 0,
+      pausedUntil = 0,
+      remainder = 0,
+      loopReady = false;
+
+    const loopWidth = () => track.scrollWidth / 2;
+
+    const normalize = () => {
+      const lw = loopWidth();
+      if (!lw) return;
+      const max = track.scrollWidth - carousel.clientWidth;
+      if (max <= 1) return;
+      while (carousel.scrollLeft <= 0) carousel.scrollLeft += lw;
+      while (carousel.scrollLeft >= max) carousel.scrollLeft -= lw;
+    };
+
+    const initLoop = () => {
+      if (loopReady) return;
+      const lw = loopWidth();
+      if (!lw) return;
+      if (track.scrollWidth - carousel.clientWidth <= 1) return;
+      carousel.scrollLeft = lw;
+      loopReady = true;
+      normalize();
+    };
+
+    const step = () => {
+      initLoop();
+      const now = performance.now();
+      const max = track.scrollWidth - carousel.clientWidth;
+      if (max > 1 && !isDragging && now >= pausedUntil) {
+        remainder += 0.42;
+        const delta = Math.trunc(remainder);
+        if (delta) {
+          carousel.scrollLeft += delta;
+          remainder -= delta;
+          normalize();
+        }
+      }
+      autoFrame = requestAnimationFrame(step);
+    };
+    autoFrame = requestAnimationFrame(step);
+
+    carousel.addEventListener("pointerdown", (e) => {
+      initLoop();
+      isDragging = true;
+      startX = e.clientX;
+      initScroll = carousel.scrollLeft;
+      carousel.classList.add("is-dragging");
+      carousel.setPointerCapture(e.pointerId);
+    });
+    carousel.addEventListener("pointermove", (e) => {
+      if (!isDragging) return;
+      carousel.scrollLeft = initScroll - (e.clientX - startX);
+      normalize();
+    });
+    const stopDrag = () => {
+      if (!isDragging) return;
+      isDragging = false;
+      carousel.classList.remove("is-dragging");
+      pausedUntil = performance.now() + 650;
+    };
+    carousel.addEventListener("pointerup", stopDrag);
+    carousel.addEventListener("pointercancel", stopDrag);
+    carousel.addEventListener("pointerleave", stopDrag);
+    carousel.addEventListener("scroll", normalize, { passive: true });
+    window.addEventListener("beforeunload", () =>
+      cancelAnimationFrame(autoFrame),
+    );
+  }
+
+  // ── Event action buttons → scroll to RSVP ────────────────────────────────
+  function initEventActions() {
+    const go = (action: "confirm" | "decline") => {
+      showConfirmationSection();
+      window.dispatchEvent(
+        new CustomEvent("rsvp-preselect", { detail: { action } }),
+      );
+      const target =
+        confirmationSection || document.getElementById("confirmacion");
+      target?.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+    eventConfirmBtn?.addEventListener("click", () => go("confirm"));
+    eventDeclineBtn?.addEventListener("click", () => go("decline"));
+  }
+
+  // ── Global events ─────────────────────────────────────────────────────────
+  window.addEventListener("guest-identified", (e) => {
+    const detail = (e as CustomEvent<GuestData>).detail;
+    if (detail) {
+      applyGuestData(detail);
+      setActionStatus(detail.status);
+    }
+  });
+  window.addEventListener("rsvp-status-updated", (e) => {
+    setActionStatus(
+      (e as CustomEvent<{ status?: GuestData["status"] }>).detail?.status,
+    );
+  });
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  setActionStatus("pending");
+  hydrateGuest();
+  initReveal();
+  initMusicFab();
+  initGalleryDrag();
+  initEventActions();
+</script>

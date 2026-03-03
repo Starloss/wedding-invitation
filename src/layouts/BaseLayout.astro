@@ -1,0 +1,361 @@
+---
+interface Props {
+  title: string;
+  skipPrivacyGate?: boolean;
+}
+
+const { title, skipPrivacyGate = false } = Astro.props;
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content="Invitación de boda — Demo" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Great+Vibes&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon-rings.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+  </head>
+  <body>
+    {
+      skipPrivacyGate ? (
+        <slot />
+      ) : (
+        <>
+          <main id="privacy-gate" class="privacy-gate-main">
+            <section class="privacy-gate-card" aria-label="Acceso privado">
+              <h1>Acceso privado</h1>
+              <p>Ingresa un código para ver la invitación.</p>
+              <p class="demo-hint">
+                💡 Prueba con <strong>DEMO123</strong> para ver el flujo completo de confirmación.
+              </p>
+              <form id="privacy-gate-form" class="privacy-gate-form">
+                <input
+                  id="privacy-gate-input"
+                  type="text"
+                  name="codigo"
+                  autocomplete="off"
+                  placeholder="Código de acceso"
+                  required
+                />
+                <button id="privacy-gate-submit" type="submit">Ingresar</button>
+              </form>
+              <p id="privacy-gate-error" class="privacy-gate-error" hidden>
+                Ingresa cualquier código para continuar.
+              </p>
+            </section>
+          </main>
+          <div id="privacy-app-content" hidden>
+            <slot />
+          </div>
+          <script>
+            import { validateRSVPToken } from '../lib/rsvp';
+
+            const gate = document.getElementById('privacy-gate') as HTMLElement | null;
+            const appContent = document.getElementById('privacy-app-content') as HTMLElement | null;
+            const gateForm = document.getElementById('privacy-gate-form') as HTMLFormElement | null;
+            const gateInput = document.getElementById('privacy-gate-input') as HTMLInputElement | null;
+            const gateError = document.getElementById('privacy-gate-error') as HTMLElement | null;
+            const gateSubmit = document.getElementById('privacy-gate-submit') as HTMLButtonElement | null;
+
+            if (!gate || !appContent || !gateForm || !gateInput) {
+              throw new Error('Privacy gate initialization failed.');
+            }
+
+            const getCodeFromUrl = () => {
+              const params = new URLSearchParams(window.location.search);
+              return params.get('codigo')?.trim() || params.get('token')?.trim() || '';
+            };
+
+            const setFormState = (isLoading: boolean) => {
+              if (gateSubmit) {
+                gateSubmit.disabled = isLoading;
+                gateSubmit.textContent = isLoading ? 'Validando...' : 'Ingresar';
+              }
+              gateInput.disabled = isLoading;
+            };
+
+            const showError = (message?: string) => {
+              if (!gateError) return;
+              gateError.textContent = message || 'Ingresa cualquier código para continuar.';
+              gateError.hidden = false;
+            };
+
+            const hideError = () => {
+              if (gateError) gateError.hidden = true;
+            };
+
+            const openApp = () => {
+              gate.hidden = true;
+              appContent.hidden = false;
+            };
+
+            /**
+             * DEMO: Any non-empty code opens the app.
+             * Codes matching known demo tokens will also hydrate guest data.
+             */
+            const validateCode = async (code: string): Promise<boolean> => {
+              if (!code) return false;
+              // Let validateRSVPToken run — it returns null for unknown codes but we still allow entry
+              await validateRSVPToken(code);
+              return true;
+            };
+
+            const attemptUnlock = async (code: string) => {
+              setFormState(true);
+              hideError();
+              const isValid = await validateCode(code);
+              setFormState(false);
+
+              if (!isValid) {
+                showError('Ingresa un código para continuar.');
+                return false;
+              }
+
+              openApp();
+
+              // Dispatch guest data event for personalization if token is recognised
+              const guest = await validateRSVPToken(code);
+              if (guest) {
+                window.dispatchEvent(
+                  new CustomEvent('guest-identified', { detail: guest }),
+                );
+              }
+
+              return true;
+            };
+
+            const initialCode = getCodeFromUrl();
+            if (initialCode) {
+              gateInput.value = initialCode;
+              void attemptUnlock(initialCode);
+            }
+
+            gateForm.addEventListener('submit', async (event) => {
+              event.preventDefault();
+              const code = gateInput.value.trim();
+              if (!code) {
+                showError('Debes ingresar un código de invitación.');
+                return;
+              }
+
+              const unlocked = await attemptUnlock(code);
+              if (!unlocked) return;
+
+              const nextUrl = new URL(window.location.href);
+              nextUrl.searchParams.set('codigo', code);
+              window.history.replaceState({}, '', nextUrl.toString());
+            });
+          </script>
+        </>
+      )
+    }
+  </body>
+</html>
+
+<style is:global>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  :root {
+    --bg: #f8f3eb;
+    --surface: #fcf8f1;
+    --surface-soft: #f4ede2;
+    --text: #3f332d;
+    --muted: #77665c;
+    --line: #dfd2c1;
+    --primary: #6f8765;
+    --primary-soft: #edf3ea;
+    --success: #5a8d71;
+    --danger: #b35b5b;
+    --radius-lg: 18px;
+    --radius-md: 12px;
+    --shadow-sm: 0 10px 24px rgba(95, 72, 54, 0.08);
+    --shadow-md: 0 22px 40px rgba(95, 72, 54, 0.12);
+    --font-body: "Cormorant Garamond", Georgia, serif;
+    --font-script: "Great Vibes", cursive;
+  }
+
+  html {
+    font-family: var(--font-body);
+    background: var(--bg);
+    scroll-behavior: smooth;
+  }
+
+  body {
+    min-height: 100vh;
+    line-height: 1.6;
+    color: var(--text);
+    background: var(--bg);
+    background-attachment: scroll;
+    letter-spacing: 0.01em;
+  }
+
+  .privacy-gate-main {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+  }
+
+  .privacy-gate-card {
+    width: min(100%, 440px);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 1.6rem 1.4rem;
+    text-align: center;
+  }
+
+  .privacy-gate-card h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .privacy-gate-card > p {
+    margin-bottom: 0.75rem;
+  }
+
+  .demo-hint {
+    background: #edf3ea;
+    border: 1px solid #c6d8bf;
+    border-radius: 8px;
+    padding: 0.6rem 0.9rem;
+    font-size: 1.05rem;
+    color: var(--primary);
+    margin-bottom: 1rem !important;
+    text-align: left;
+  }
+
+  .privacy-gate-form {
+    display: grid;
+    gap: 0.65rem;
+  }
+
+  .privacy-gate-form input {
+    margin-bottom: 0;
+  }
+
+  .privacy-gate-error {
+    color: var(--danger);
+    margin-top: 0.75rem;
+    margin-bottom: 0;
+    font-size: 1.05rem;
+  }
+
+  section {
+    padding: 0;
+    max-width: none;
+    margin: 0;
+    background: var(--bg);
+  }
+
+  h1 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    text-align: center;
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  h2 {
+    font-size: 2.35rem;
+    margin-bottom: 1rem;
+    text-align: center;
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  h3 {
+    font-size: 1.42rem;
+    margin-bottom: 0.75rem;
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  p {
+    margin-bottom: 1rem;
+    font-size: 1.32rem;
+    color: var(--muted);
+  }
+
+  a {
+    color: var(--primary);
+  }
+
+  button {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    padding: 0.75rem 1.3rem;
+    font-size: 1.16rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text);
+    font-weight: 600;
+    font-family: inherit;
+  }
+
+  button:hover {
+    background: #f3ebdf;
+    transform: translateY(-1px);
+  }
+
+  button:disabled {
+    background: #eceae6;
+    cursor: not-allowed;
+  }
+
+  input,
+  textarea {
+    width: 100%;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    border-radius: 5px;
+    font-size: 1.16rem;
+    font-family: inherit;
+    color: var(--text);
+  }
+
+  input:focus,
+  textarea:focus {
+    outline: none;
+    border-color: #a8baa0;
+    box-shadow: 0 0 0 3px rgba(111, 135, 101, 0.16);
+  }
+
+  @media (max-width: 768px) {
+    section {
+      padding: 0;
+    }
+
+    h1 {
+      font-size: 2rem;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+    }
+
+    h3 {
+      font-size: 1.25rem;
+    }
+
+    p {
+      font-size: 1.12rem;
+    }
+  }
+</style>

@@ -1,0 +1,396 @@
+---
+
+---
+
+<div class="rsvp-container">
+  <h2>Confirma tu Asistencia</h2>
+  <p>Por favor ingresa el código de invitación que recibiste.</p>
+  <p class="demo-hint">
+    💡 Demo: usa <strong>DEMO123</strong> o <strong>DEMO456</strong>
+  </p>
+
+  <div id="rsvp-form">
+    <div id="token-form-group" class="form-group">
+      <input
+        type="text"
+        id="token-input"
+        placeholder="Código de invitación"
+        required
+      />
+      <button id="validate-btn">Validar Código</button>
+    </div>
+
+    <div id="guest-info" style="display: none;">
+      <h3>Bienvenido, <span id="guest-name"></span>!</h3>
+      <p>Máximo de invitados: <span id="max-guests"></span></p>
+      <p id="action-hint" class="action-hint" style="display: none;"></p>
+
+      <div class="form-group">
+        <label for="confirmed-guests">¿Cuántos confirman asistencia?</label>
+        <input type="number" id="confirmed-guests" min="0" max="10" />
+      </div>
+
+      <div class="button-group">
+        <button id="confirm-btn" class="btn-confirm"
+          >Confirmar Asistencia</button
+        >
+        <button id="decline-btn" class="btn-decline">No Podré Asistir</button>
+      </div>
+    </div>
+
+    <div id="message" class="message"></div>
+  </div>
+
+  <div id="rsvp-modal" class="rsvp-modal-backdrop" hidden>
+    <div
+      class="rsvp-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="rsvp-modal-title"
+    >
+      <h3 id="rsvp-modal-title">Aviso</h3>
+      <p id="rsvp-modal-message"></p>
+      <div class="rsvp-modal-actions">
+        <button id="rsvp-modal-cancel" type="button" class="secondary">
+          Cancelar
+        </button>
+        <button id="rsvp-modal-confirm" type="button">Aceptar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .rsvp-container {
+    background: var(--surface);
+    padding: 1.5rem;
+    border: 1px solid var(--line);
+    border-radius: 0;
+    box-shadow: var(--shadow-sm);
+    max-width: none;
+    margin: 0;
+  }
+
+  .rsvp-container > p {
+    text-align: center;
+  }
+
+  .demo-hint {
+    background: #edf3ea;
+    border: 1px solid #c6d8bf;
+    border-radius: 8px;
+    padding: 0.5rem 0.8rem;
+    font-size: 1.05rem;
+    color: var(--primary);
+    text-align: left;
+    margin-bottom: 1rem !important;
+  }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--muted);
+  }
+
+  .button-group {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .button-group button {
+    flex: 1;
+    min-width: 150px;
+  }
+
+  .btn-confirm {
+    background: var(--success);
+    color: #fff;
+    border-color: #2c855d;
+  }
+
+  .btn-confirm:hover {
+    background: #3e7a5e;
+  }
+
+  .btn-decline {
+    background: var(--danger);
+    color: #fff;
+    border-color: #a54242;
+  }
+
+  .btn-decline:hover {
+    background: #a54242;
+  }
+
+  .message {
+    margin-top: 1rem;
+    padding: 0.8rem;
+    border-radius: 5px;
+    font-weight: 600;
+    display: none;
+    font-size: 1.15rem;
+  }
+
+  .message.success {
+    background: var(--primary-soft);
+    color: var(--primary);
+    border: 1px solid #c6d8bf;
+    display: block;
+  }
+
+  .message.error {
+    background: #f8eaea;
+    color: var(--danger);
+    border: 1px solid #e0b0b0;
+    display: block;
+  }
+
+  .action-hint {
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  .rsvp-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(37, 28, 22, 0.52);
+    z-index: 200;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+  }
+
+  .rsvp-modal-backdrop[hidden] {
+    display: none;
+  }
+
+  .rsvp-modal {
+    width: min(100%, 420px);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 1.4rem;
+    box-shadow: var(--shadow-md);
+    text-align: center;
+  }
+
+  .rsvp-modal h3 {
+    margin-bottom: 0.5rem;
+  }
+
+  .rsvp-modal p {
+    margin-bottom: 1rem;
+  }
+
+  .rsvp-modal-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .secondary {
+    background: transparent;
+    color: var(--primary);
+    border: 1px solid var(--primary);
+  }
+</style>
+
+<script>
+  import { validateRSVPToken, submitRSVP } from "../lib/rsvp";
+
+  const tokenInput = document.getElementById(
+    "token-input",
+  ) as HTMLInputElement | null;
+  const validateBtn = document.getElementById(
+    "validate-btn",
+  ) as HTMLButtonElement | null;
+  const guestInfoEl = document.getElementById(
+    "guest-info",
+  ) as HTMLElement | null;
+  const guestNameEl = document.getElementById(
+    "guest-name",
+  ) as HTMLElement | null;
+  const maxGuestsEl = document.getElementById(
+    "max-guests",
+  ) as HTMLElement | null;
+  const confirmedGuestsInput = document.getElementById(
+    "confirmed-guests",
+  ) as HTMLInputElement | null;
+  const confirmBtn = document.getElementById(
+    "confirm-btn",
+  ) as HTMLButtonElement | null;
+  const declineBtn = document.getElementById(
+    "decline-btn",
+  ) as HTMLButtonElement | null;
+  const messageEl = document.getElementById("message") as HTMLElement | null;
+  const actionHint = document.getElementById(
+    "action-hint",
+  ) as HTMLElement | null;
+  const modal = document.getElementById("rsvp-modal") as HTMLElement | null;
+  const modalTitle = document.getElementById(
+    "rsvp-modal-title",
+  ) as HTMLElement | null;
+  const modalMessage = document.getElementById(
+    "rsvp-modal-message",
+  ) as HTMLElement | null;
+  const modalCancel = document.getElementById(
+    "rsvp-modal-cancel",
+  ) as HTMLButtonElement | null;
+  const modalConfirm = document.getElementById(
+    "rsvp-modal-confirm",
+  ) as HTMLButtonElement | null;
+
+  let currentToken = "";
+  let currentMaxGuests = 0;
+  let pendingAction: "confirm" | "decline" | null = null;
+
+  function showMessage(text: string, type: "success" | "error") {
+    if (!messageEl) return;
+    messageEl.textContent = text;
+    messageEl.className = `message ${type}`;
+  }
+
+  function openModal(title: string, message: string, onConfirm: () => void) {
+    if (!modal || !modalTitle || !modalMessage || !modalConfirm) return;
+    modalTitle.textContent = title;
+    modalMessage.textContent = message;
+    modal.hidden = false;
+    const cleanup = () => {
+      modal.hidden = true;
+      modalConfirm?.removeEventListener("click", handleConfirm);
+      modalCancel?.removeEventListener("click", handleCancel);
+    };
+    const handleConfirm = () => {
+      cleanup();
+      onConfirm();
+    };
+    const handleCancel = () => {
+      cleanup();
+    };
+    modalConfirm.addEventListener("click", handleConfirm, { once: true });
+    modalCancel?.addEventListener("click", handleCancel, { once: true });
+  }
+
+  // Pre-populate token from URL or from guest-identified event
+  const urlParams = new URLSearchParams(window.location.search);
+  const tokenFromUrl =
+    urlParams.get("codigo")?.trim() || urlParams.get("token")?.trim();
+  if (tokenFromUrl && tokenInput) {
+    tokenInput.value = tokenFromUrl;
+  }
+
+  window.addEventListener("rsvp-preselect", (event) => {
+    const detail = (event as CustomEvent<{ action: string }>).detail;
+    if (detail?.action === "confirm") confirmBtn?.click();
+    if (detail?.action === "decline") declineBtn?.click();
+  });
+
+  validateBtn?.addEventListener("click", async () => {
+    const token = tokenInput?.value.trim() ?? "";
+    if (!token) {
+      showMessage("Ingresa tu código de invitación.", "error");
+      return;
+    }
+
+    validateBtn.disabled = true;
+    validateBtn.textContent = "Validando...";
+
+    const guest = await validateRSVPToken(token);
+
+    validateBtn.disabled = false;
+    validateBtn.textContent = "Validar Código";
+
+    if (!guest) {
+      showMessage("Código no encontrado. Verifica tu invitación.", "error");
+      return;
+    }
+
+    currentToken = token;
+    currentMaxGuests = guest.maxGuests;
+
+    if (guestNameEl) guestNameEl.textContent = guest.name ?? "Invitado";
+    if (maxGuestsEl) maxGuestsEl.textContent = String(guest.maxGuests);
+    if (confirmedGuestsInput) {
+      confirmedGuestsInput.max = String(guest.maxGuests);
+      confirmedGuestsInput.value = String(guest.maxGuests);
+    }
+
+    if (guest.status === "confirmed" && actionHint) {
+      actionHint.textContent =
+        "Ya confirmaste tu asistencia. Puedes modificar si lo necesitas.";
+      actionHint.style.display = "block";
+    } else if (guest.status === "declined" && actionHint) {
+      actionHint.textContent =
+        "Indicaste que no podrás asistir. Puedes cambiar tu respuesta.";
+      actionHint.style.display = "block";
+    }
+
+    if (guestInfoEl) guestInfoEl.style.display = "block";
+    if (messageEl) messageEl.className = "message";
+
+    // Propagate guest data upward
+    window.dispatchEvent(
+      new CustomEvent("guest-identified", { detail: guest }),
+    );
+    window.dispatchEvent(
+      new CustomEvent("rsvp-status-updated", {
+        detail: { status: guest.status },
+      }),
+    );
+  });
+
+  confirmBtn?.addEventListener("click", () => {
+    const count = parseInt(confirmedGuestsInput?.value ?? "0", 10);
+    if (count > currentMaxGuests) {
+      showMessage(`El máximo de invitados es ${currentMaxGuests}.`, "error");
+      return;
+    }
+    openModal(
+      "Confirmar asistencia",
+      `¿Confirmar ${count} ${count === 1 ? "invitado" : "invitados"}?`,
+      async () => {
+        const ok = await submitRSVP(currentToken, count, "confirmed");
+        if (ok) {
+          showMessage("¡Asistencia confirmada! Te esperamos 🎉", "success");
+          window.dispatchEvent(
+            new CustomEvent("rsvp-status-updated", {
+              detail: { status: "confirmed" },
+            }),
+          );
+        } else {
+          showMessage("Error al confirmar. Intenta de nuevo.", "error");
+        }
+      },
+    );
+  });
+
+  declineBtn?.addEventListener("click", () => {
+    openModal(
+      "No podré asistir",
+      "¿Confirmar que no podrás asistir?",
+      async () => {
+        const ok = await submitRSVP(currentToken, 0, "declined");
+        if (ok) {
+          showMessage(
+            "Lamentamos que no puedas venir. ¡Gracias por avisar!",
+            "success",
+          );
+          window.dispatchEvent(
+            new CustomEvent("rsvp-status-updated", {
+              detail: { status: "declined" },
+            }),
+          );
+        } else {
+          showMessage("Error al registrar. Intenta de nuevo.", "error");
+        }
+      },
+    );
+  });
+</script>

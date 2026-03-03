@@ -1,0 +1,169 @@
+---
+// Demo: fecha futura genérica — 6 meses desde hoy aprox.
+const weddingDate = "2026-09-12T17:00:00";
+---
+
+<div class="countdown-container">
+  <p class="countdown-kicker">Para nuestra boda</p>
+  <h2>Cuenta regresiva</h2>
+  <div class="countdown" id="countdown">
+    <div class="time-unit">
+      <span class="number" id="days">0</span>
+      <span class="label">Días</span>
+    </div>
+    <div class="time-unit">
+      <span class="number" id="hours">0</span>
+      <span class="label">Horas</span>
+    </div>
+    <div class="time-unit">
+      <span class="number" id="minutes">0</span>
+      <span class="label">Minutos</span>
+    </div>
+    <div class="time-unit">
+      <span class="number" id="seconds">0</span>
+      <span class="label">Segundos</span>
+    </div>
+  </div>
+</div>
+
+<style>
+  .countdown-container {
+    text-align: center;
+    padding: 1.75rem 1.1rem;
+    max-width: 900px;
+    margin: 0;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 0;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+  }
+
+  .countdown-container::before,
+  .countdown-container::after {
+    content: "❦";
+    position: absolute;
+    color: #8f7e6d;
+    opacity: 0.28;
+    font-size: 1.25rem;
+  }
+
+  .countdown-container::before {
+    top: 1rem;
+    left: 1.25rem;
+  }
+
+  .countdown-container::after {
+    bottom: 1rem;
+    right: 1.25rem;
+  }
+
+  .countdown-kicker {
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.35rem;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+
+  h2 {
+    font-size: clamp(2rem, 6vw, 2.8rem);
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 1.2rem;
+    font-family: inherit;
+  }
+
+  .countdown {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    margin: 0 auto;
+    max-width: 720px;
+    gap: 0;
+  }
+
+  .time-unit {
+    flex: 1;
+    min-width: 0;
+    padding: 0.28rem 0.7rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-right: 1px solid var(--line);
+  }
+
+  .time-unit:last-child {
+    border-right: none;
+  }
+
+  .number {
+    font-size: clamp(2.6rem, 7vw, 4.2rem);
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+    display: block;
+    min-width: 2ch;
+    text-align: center;
+  }
+
+  .label {
+    font-size: 0.76rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18rem;
+    color: var(--muted);
+    margin-top: 0.3rem;
+    display: block;
+  }
+
+  @media (max-width: 540px) {
+    .time-unit {
+      padding: 0.22rem 0.35rem;
+    }
+
+    .label {
+      font-size: 0.68rem;
+      letter-spacing: 0.1rem;
+    }
+  }
+</style>
+
+<script define:vars={{ weddingDate }}>
+  const target = new Date(weddingDate).getTime();
+
+  const daysEl = document.getElementById("days");
+  const hoursEl = document.getElementById("hours");
+  const minutesEl = document.getElementById("minutes");
+  const secondsEl = document.getElementById("seconds");
+
+  function pad(n) {
+    return String(n).padStart(2, "0");
+  }
+
+  function tick() {
+    const now = Date.now();
+    const diff = target - now;
+
+    if (diff <= 0) {
+      if (daysEl) daysEl.textContent = "00";
+      if (hoursEl) hoursEl.textContent = "00";
+      if (minutesEl) minutesEl.textContent = "00";
+      if (secondsEl) secondsEl.textContent = "00";
+      return;
+    }
+
+    const days = Math.floor(diff / 86400000);
+    const hours = Math.floor((diff % 86400000) / 3600000);
+    const minutes = Math.floor((diff % 3600000) / 60000);
+    const seconds = Math.floor((diff % 60000) / 1000);
+
+    if (daysEl) daysEl.textContent = pad(days);
+    if (hoursEl) hoursEl.textContent = pad(hours);
+    if (minutesEl) minutesEl.textContent = pad(minutes);
+    if (secondsEl) secondsEl.textContent = pad(seconds);
+  }
+
+  tick();
+  setInterval(tick, 1000);
+</script>
