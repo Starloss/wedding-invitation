@@ -47,6 +47,9 @@ const { title, skipPrivacyGate = false } = Astro.props;
                 />
                 <button id="privacy-gate-submit" type="submit">Ingresar</button>
               </form>
+              <a href="/anfitrion" class="privacy-gate-host-link"
+                >Ir al panel de anfitrión</a
+              >
               <p id="privacy-gate-error" class="privacy-gate-error" hidden>
                 Ingresa cualquier código para continuar.
               </p>
@@ -245,6 +248,29 @@ const { title, skipPrivacyGate = false } = Astro.props;
 
   .privacy-gate-form input {
     margin-bottom: 0;
+  }
+
+  .privacy-gate-host-link {
+    margin-top: 0.7rem;
+    margin-bottom: 0;
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.3rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    text-decoration: none;
+    color: var(--text);
+    font-size: 1.16rem;
+    font-weight: 600;
+    background: var(--surface);
+    transition: all 0.2s ease;
+  }
+
+  .privacy-gate-host-link:hover {
+    background: #f3ebdf;
+    transform: translateY(-1px);
   }
 
   .privacy-gate-error {

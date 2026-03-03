@@ -1,0 +1,2230 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+const adminUsername = import.meta.env.ADMIN_USERNAME || "admin";
+const adminPassword = import.meta.env.ADMIN_PASSWORD || "admin123";
+---
+
+<BaseLayout title="Panel de Anfitrión" skipPrivacyGate>
+  <main class="host-main">
+    <section
+      id="admin-login"
+      class="panel-card login-card"
+      data-admin-user={adminUsername}
+      data-admin-pass={adminPassword}
+    >
+      <h1>Acceso administrativo</h1>
+      <p>Ingresa usuario y clave para administrar invitaciones y contenido.</p>
+      <p class="login-credentials">
+        <strong>Usuario:</strong>
+        {adminUsername}<br />
+        <strong>Clave:</strong>
+        {adminPassword}
+      </p>
+
+      <form id="login-form" class="login-form">
+        <input
+          id="login-user"
+          type="text"
+          placeholder="Usuario"
+          title="Usuario de acceso"
+          autocomplete="username"
+          required
+        />
+        <input
+          id="login-pass"
+          type="password"
+          placeholder="Clave"
+          title="Clave de acceso"
+          autocomplete="current-password"
+          required
+        />
+        <button type="submit">Entrar al panel</button>
+      </form>
+
+      <p id="login-error" class="login-error" aria-live="polite"></p>
+    </section>
+
+    <div id="admin-content" hidden>
+      <section class="host-header panel-card">
+        <h1>Panel de Anfitrión</h1>
+        <p>
+          Gestiona invitaciones por grupo, confirmaciones, canciones sugeridas y
+          fotos del evento.
+        </p>
+      </section>
+
+      <section class="host-stats panel-card" id="host-stats">
+        <article class="stat-card">
+          <h2>Invitaciones</h2>
+          <p id="stat-total-invitations">0</p>
+        </article>
+        <article class="stat-card">
+          <h2>Invitados totales</h2>
+          <p id="stat-total-guests">0</p>
+        </article>
+        <article class="stat-card">
+          <h2>Confirmados</h2>
+          <p id="stat-confirmed-guests">0</p>
+        </article>
+        <article class="stat-card">
+          <h2>Invitados pendientes</h2>
+          <p id="stat-pending-invitations">0</p>
+        </article>
+      </section>
+
+      <section class="host-table-wrap panel-card">
+        <div class="table-head">
+          <h2>Invitaciones</h2>
+          <div class="table-actions">
+            <button
+              id="new-invitation-btn"
+              type="button"
+              title="Crear nueva invitación"
+            >
+              Nueva invitación
+            </button>
+          </div>
+        </div>
+
+        <div id="invitation-form-wrap" class="invitation-form-wrap" hidden>
+          <h3 id="invitation-form-title">Nueva invitación</h3>
+          <form id="invitation-form" class="invitation-form">
+            <div class="field-row">
+              <label class="field-control">
+                <span class="field-label">Token</span>
+                <input
+                  id="invitation-token"
+                  type="text"
+                  placeholder="Token (opcional, se genera solo)"
+                  title="Token único de la invitación"
+                />
+              </label>
+              <label class="field-control">
+                <span class="field-label">Teléfono de contacto</span>
+                <input
+                  id="invitation-phone"
+                  type="text"
+                  placeholder="Teléfono de contacto"
+                  title="Teléfono de contacto de la invitación"
+                />
+              </label>
+            </div>
+
+            <div class="field-row">
+              <label class="field-control">
+                <span class="field-label">Cantidad de invitados</span>
+                <div class="number-input-wrap">
+                  <input
+                    id="invitation-max-guests"
+                    type="number"
+                    min="1"
+                    max="20"
+                    value="2"
+                    placeholder="Cantidad de invitados"
+                    title="Cantidad total de invitados en esta invitación"
+                    required
+                  />
+                  <div class="number-stepper">
+                    <button
+                      type="button"
+                      class="step-btn"
+                      data-stepper-target="invitation-max-guests"
+                      data-stepper-action="up"
+                      title="Aumentar invitados">+</button
+                    >
+                    <button
+                      type="button"
+                      class="step-btn"
+                      data-stepper-target="invitation-max-guests"
+                      data-stepper-action="down"
+                      title="Reducir invitados">−</button
+                    >
+                  </div>
+                </div>
+              </label>
+
+              <label class="field-control">
+                <span class="field-label">Acompañantes</span>
+                <div class="number-input-wrap">
+                  <input
+                    id="invitation-companions"
+                    type="number"
+                    min="0"
+                    max="20"
+                    value="0"
+                    placeholder="Cantidad de acompañantes"
+                    title="Cantidad de acompañantes de la invitación"
+                    required
+                  />
+                  <div class="number-stepper">
+                    <button
+                      type="button"
+                      class="step-btn"
+                      data-stepper-target="invitation-companions"
+                      data-stepper-action="up"
+                      title="Aumentar acompañantes">+</button
+                    >
+                    <button
+                      type="button"
+                      class="step-btn"
+                      data-stepper-target="invitation-companions"
+                      data-stepper-action="down"
+                      title="Reducir acompañantes">−</button
+                    >
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            <div class="field-row">
+              <label class="field-control">
+                <span class="field-label">Estado de la invitación</span>
+                <div class="select-wrap">
+                  <select
+                    id="invitation-status"
+                    title="Estado de la invitación"
+                  >
+                    <option value="pending">Pendiente</option>
+                    <option value="confirmed">Confirmada</option>
+                    <option value="declined">Declinada</option>
+                  </select>
+                </div>
+              </label>
+              <label class="field-control">
+                <span class="field-label">Confirmados</span>
+                <div class="number-input-wrap">
+                  <input
+                    id="invitation-confirmed-guests"
+                    type="number"
+                    min="0"
+                    max="20"
+                    value="0"
+                    placeholder="Confirmados"
+                    title="Cantidad de invitados confirmados en esta invitación"
+                    required
+                  />
+                  <div class="number-stepper">
+                    <button
+                      type="button"
+                      class="step-btn"
+                      data-stepper-target="invitation-confirmed-guests"
+                      data-stepper-action="up"
+                      title="Aumentar confirmados">+</button
+                    >
+                    <button
+                      type="button"
+                      class="step-btn"
+                      data-stepper-target="invitation-confirmed-guests"
+                      data-stepper-action="down"
+                      title="Reducir confirmados">−</button
+                    >
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            <div class="invitees-wrap">
+              <h4>Invitados de la invitación</h4>
+              <p>Completa nombre y apellido de cada invitado.</p>
+              <div id="invitees-list" class="invitees-list"></div>
+            </div>
+
+            <div class="form-actions">
+              <button id="save-invitation-btn" type="submit">Guardar</button>
+              <button
+                id="cancel-invitation-btn"
+                type="button"
+                class="secondary"
+              >
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table guest-table">
+            <thead>
+              <tr>
+                <th>
+                  <button
+                    class="sort-btn"
+                    data-guest-sort="displayName"
+                    type="button"
+                  >
+                    Invitación
+                  </button>
+                </th>
+                <th>
+                  <button
+                    class="sort-btn"
+                    data-guest-sort="token"
+                    type="button"
+                  >
+                    Token
+                  </button>
+                </th>
+                <th>
+                  <button
+                    class="sort-btn"
+                    data-guest-sort="status"
+                    type="button"
+                  >
+                    Estado
+                  </button>
+                </th>
+                <th>
+                  <button
+                    class="sort-btn"
+                    data-guest-sort="confirmedGuests"
+                    type="button"
+                  >
+                    Confirmados
+                  </button>
+                </th>
+                <th>
+                  <button
+                    class="sort-btn"
+                    data-guest-sort="maxGuests"
+                    type="button"
+                  >
+                    Máx. invitados
+                  </button>
+                </th>
+                <th>Acomp.</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="guest-table-body"></tbody>
+          </table>
+        </div>
+
+        <div class="pagination" id="guest-pagination">
+          <button id="guest-prev" type="button" class="secondary"
+            >Anterior</button
+          >
+          <span id="guest-page-label">Página 1</span>
+          <button id="guest-next" type="button" class="secondary"
+            >Siguiente</button
+          >
+        </div>
+      </section>
+
+      <section class="host-photos panel-card">
+        <div class="table-head">
+          <h2>Fotos subidas</h2>
+          <div class="table-actions photos-actions">
+            <p id="photo-upload-status" class="photo-upload-status"></p>
+            <button
+              id="photo-upload-toggle-btn"
+              type="button"
+              class="secondary"
+              title="Activar o desactivar subida de fotos">Cargando...</button
+            >
+          </div>
+        </div>
+        <p id="photos-count">Cargando fotos...</p>
+        <div id="photos-grid" class="photos-grid"></div>
+      </section>
+
+      <section class="host-songs panel-card">
+        <div class="table-head">
+          <h2>Canciones sugeridas</h2>
+        </div>
+        <div class="table-container">
+          <table class="data-table songs-table">
+            <thead>
+              <tr>
+                <th>
+                  <button class="sort-btn" data-song-sort="title" type="button">
+                    Canción
+                  </button>
+                </th>
+                <th>
+                  <button
+                    class="sort-btn"
+                    data-song-sort="artist"
+                    type="button"
+                  >
+                    Artista
+                  </button>
+                </th>
+                <th>YouTube</th>
+                <th>
+                  <button
+                    class="sort-btn"
+                    data-song-sort="guestToken"
+                    type="button"
+                  >
+                    Token
+                  </button>
+                </th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="songs-table-body"></tbody>
+          </table>
+        </div>
+
+        <div class="pagination" id="song-pagination">
+          <button id="song-prev" type="button" class="secondary"
+            >Anterior</button
+          >
+          <span id="song-page-label">Página 1</span>
+          <button id="song-next" type="button" class="secondary"
+            >Siguiente</button
+          >
+        </div>
+      </section>
+    </div>
+
+    <div id="panel-modal" class="panel-modal-backdrop" hidden>
+      <div
+        class="panel-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="panel-modal-title"
+      >
+        <h3 id="panel-modal-title">Aviso</h3>
+        <p id="panel-modal-message"></p>
+        <div class="panel-modal-actions">
+          <button id="panel-modal-cancel" type="button" class="secondary">
+            Cancelar
+          </button>
+          <button id="panel-modal-confirm" type="button">Aceptar</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</BaseLayout>
+
+<style>
+  .host-main {
+    max-width: 1120px;
+    margin-inline: auto;
+    padding: 1rem 0.9rem 3rem;
+    display: grid;
+    gap: 1rem;
+  }
+
+  .panel-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 0;
+    box-shadow: var(--shadow-sm);
+    padding: 1.2rem;
+  }
+
+  .login-card {
+    max-width: 520px;
+    width: 100%;
+    margin-inline: auto;
+  }
+
+  .login-form {
+    margin-top: 0.9rem;
+    display: grid;
+    gap: 0.65rem;
+  }
+
+  .login-credentials {
+    margin: 0.4rem 0 0.2rem;
+    padding: 0.7rem 0.85rem;
+    background: var(--primary-soft);
+    border: 1px solid var(--line);
+    color: var(--text);
+    font-size: 1.05rem;
+    text-align: left;
+  }
+
+  .login-credentials strong {
+    color: var(--title);
+  }
+
+  .login-error {
+    min-height: 1.2rem;
+    margin: 0.6rem 0 0;
+    color: #b84848;
+    font-weight: 600;
+  }
+
+  .host-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.8rem;
+  }
+
+  .stat-card {
+    border: 1px solid var(--line);
+    background: var(--bg);
+    padding: 1rem;
+    text-align: center;
+  }
+
+  .stat-card h2 {
+    margin-bottom: 0.35rem;
+    font-size: 1rem;
+  }
+
+  .stat-card p {
+    margin: 0;
+    font-size: 2rem;
+    line-height: 1;
+    font-weight: 700;
+    text-align: center;
+    color: var(--title);
+  }
+
+  .table-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .table-actions {
+    display: flex;
+    gap: 0.55rem;
+    align-items: center;
+  }
+
+  .invitation-form-wrap {
+    border: 1px solid var(--line);
+    background: var(--bg);
+    padding: 0.95rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .invitation-form-wrap h3 {
+    margin-bottom: 0.65rem;
+  }
+
+  .invitation-form {
+    display: grid;
+    gap: 0.6rem;
+  }
+
+  .field-control {
+    display: grid;
+    gap: 0.32rem;
+  }
+
+  .field-label {
+    font-size: 1.05rem;
+    color: var(--title);
+    font-weight: 600;
+  }
+
+  .field-control > input,
+  .field-control > .select-wrap,
+  .field-control > .number-input-wrap {
+    width: 100%;
+    min-height: 46px;
+  }
+
+  .field-control > input {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 0.72rem 0.85rem;
+    line-height: 1.2;
+    margin: 0;
+  }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+  }
+
+  .invitees-wrap {
+    border: 1px dashed var(--line);
+    padding: 0.75rem;
+  }
+
+  .invitees-wrap h4 {
+    margin-bottom: 0.25rem;
+  }
+
+  .invitees-wrap p {
+    margin-bottom: 0.6rem;
+    font-size: 1.1rem;
+  }
+
+  .invitees-list {
+    display: grid;
+    gap: 0.45rem;
+  }
+
+  .invitee-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem;
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 0.55rem;
+  }
+
+  button.secondary {
+    background: transparent;
+    color: var(--primary);
+    border-color: var(--primary);
+  }
+
+  .table-container {
+    overflow-x: auto;
+  }
+
+  :global(td.empty-table-state) {
+    text-align: center !important;
+    padding: 1.5rem 1.1rem !important;
+    color: #5f6f6a;
+    white-space: normal !important;
+    font-weight: 500;
+    display: table-cell;
+    width: 100%;
+  }
+
+  :global(.empty-table-message) {
+    max-width: 560px;
+    margin-inline: auto;
+    text-align: center;
+    line-height: 1.65;
+    font-size: 1.12rem;
+  }
+
+  :global(.data-table) {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid var(--line);
+    background: var(--surface);
+  }
+
+  :global(.data-table th),
+  :global(.data-table td) {
+    text-align: left;
+    padding: 1.1rem 0.95rem;
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+    vertical-align: middle;
+    line-height: 1.45;
+    font-size: 1.1rem;
+  }
+
+  .sort-btn {
+    border: none;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    color: var(--title);
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .sort-btn::after {
+    content: "";
+    font-size: 0.72rem;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .sort-btn.sort-active {
+    color: var(--primary);
+  }
+
+  .sort-btn.sort-active::after {
+    opacity: 1;
+  }
+
+  .sort-btn[data-dir="asc"]::after {
+    content: "▲";
+  }
+
+  .sort-btn[data-dir="desc"]::after {
+    content: "▼";
+  }
+
+  :global(.status-pill) {
+    display: inline-block;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  :global(.status-confirmed) {
+    background: #def7ea;
+    color: #267c55;
+  }
+
+  :global(.status-pending) {
+    background: #eef2f7;
+    color: #5f7385;
+  }
+
+  :global(.status-declined) {
+    background: #fde6e6;
+    color: #9b3939;
+  }
+
+  :global(.row-actions) {
+    display: inline-flex;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  :global(.action-btn) {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
+    padding: 0;
+    font-size: 1.18rem;
+    line-height: 1;
+    margin: 0;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    border: 1px solid var(--line);
+    color: var(--title);
+  }
+
+  :global(.action-btn:hover) {
+    transform: translateY(-1px);
+  }
+
+  :global(.action-btn .action-icon) {
+    width: 18px;
+    height: 18px;
+    display: block;
+    object-fit: contain;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  :global(.action-btn.is-copied) {
+    outline: 2px solid rgba(255, 255, 255, 0.55);
+    outline-offset: 1px;
+  }
+
+  :global(.action-btn.copy) {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+    font-weight: 700;
+  }
+
+  :global(.action-btn.danger) {
+    background: #b84848;
+    border-color: #b84848;
+    color: #fff;
+  }
+
+  :global(.action-btn.edit) {
+    background: #5ea2ff;
+    border-color: #5ea2ff;
+    color: #fff;
+  }
+
+  :global(.songs-action-cell) {
+    text-align: center;
+    width: 84px;
+  }
+
+  :global(.songs-table th:last-child),
+  :global(.songs-table td:last-child) {
+    width: 84px;
+    text-align: center;
+  }
+
+  .pagination {
+    margin-top: 0.75rem;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.55rem;
+  }
+
+  .pagination button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
+    transform: none;
+  }
+
+  .select-wrap {
+    position: relative;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    min-height: 46px;
+    border-radius: 5px;
+  }
+
+  .select-wrap::after {
+    content: "▾";
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--title);
+    pointer-events: none;
+    font-size: 0.9rem;
+  }
+
+  .select-wrap select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    width: 100%;
+    padding: 0.72rem 2rem 0.72rem 0.85rem;
+    background: transparent;
+    border: none;
+    color: var(--title);
+    border-radius: 0;
+    min-height: 46px;
+    margin: 0;
+    line-height: 1.2;
+    font-family: inherit;
+    font-size: 1.05rem;
+  }
+
+  .number-input-wrap {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: stretch;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    min-height: 46px;
+    border-radius: 5px;
+    overflow: hidden;
+  }
+
+  .number-input-wrap input[type="number"] {
+    border: none;
+    margin: 0;
+    border-radius: 0;
+    min-height: 46px;
+    height: 46px;
+    width: 100%;
+    padding: 0.72rem 0.85rem;
+    line-height: 1.2;
+    background: transparent;
+    -moz-appearance: textfield;
+    font-family: inherit;
+    font-size: 1.05rem;
+  }
+
+  .number-input-wrap input[type="number"]::-webkit-outer-spin-button,
+  .number-input-wrap input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .number-stepper {
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    width: 42px;
+    border-left: 1px solid var(--line);
+  }
+
+  .step-btn {
+    border: none;
+    margin: 0;
+    background: transparent;
+    color: var(--title);
+    font-weight: 700;
+    font-size: 0.9rem;
+    line-height: 1;
+    padding: 0;
+    cursor: pointer;
+    border-radius: 0 !important;
+    min-height: 0;
+    min-width: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+  }
+
+  .step-btn:first-child {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .step-btn:hover {
+    background: rgba(95, 117, 86, 0.12);
+  }
+
+  .photos-grid {
+    margin-top: 0.8rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 0.7rem;
+  }
+
+  .photos-actions {
+    align-items: center;
+    gap: 0.55rem;
+  }
+
+  .photo-upload-status {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--muted);
+  }
+
+  .photo-upload-status.is-enabled {
+    color: #267c55;
+    font-weight: 600;
+  }
+
+  .photo-upload-status.is-disabled {
+    color: #9b3939;
+    font-weight: 600;
+  }
+
+  #photos-count {
+    text-align: center;
+    margin-bottom: 0.65rem;
+    width: 100%;
+  }
+
+  .photos-grid.is-empty {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .photo-item {
+    width: 100%;
+    max-width: 100%;
+    height: 190px;
+    max-height: 220px;
+  }
+
+  .empty-state {
+    padding: 1.1rem 1.2rem;
+    border: 1px dashed var(--line);
+    text-align: center;
+    background: var(--bg);
+    width: min(680px, 100%);
+    margin-inline: auto;
+    line-height: 1.6;
+  }
+
+  .panel-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(37, 28, 22, 0.56);
+    display: grid;
+    place-items: center;
+    z-index: 220;
+    padding: 1rem;
+  }
+
+  .panel-modal-backdrop[hidden] {
+    display: none !important;
+  }
+
+  .panel-modal {
+    width: min(460px, 92vw);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow-md);
+    padding: 1.15rem 1rem;
+  }
+
+  .panel-modal h3 {
+    margin-bottom: 0.35rem;
+    text-align: center;
+  }
+
+  .panel-modal p {
+    margin-bottom: 0;
+    text-align: center;
+  }
+
+  .panel-modal-actions {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+
+  .panel-modal-actions button {
+    min-width: 124px;
+  }
+
+  @media (max-width: 980px) {
+    .host-stats {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .table-head {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .table-actions,
+    .form-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .field-row,
+    .invitee-row {
+      grid-template-columns: 1fr;
+    }
+
+    .pagination {
+      justify-content: space-between;
+    }
+  }
+</style>
+
+<script>
+  import { db, storage } from "../lib/firebase";
+  import {
+    collection,
+    deleteDoc,
+    doc,
+    getDoc,
+    getDocs,
+    limit,
+    orderBy,
+    query,
+    serverTimestamp,
+    setDoc,
+    startAfter,
+    updateDoc,
+  } from "firebase/firestore";
+  import { deleteObject, getDownloadURL, listAll, ref } from "firebase/storage";
+  import { createPhotoDisplayCard } from "../lib/photoDisplayCard";
+
+  type GuestStatus = "pending" | "confirmed" | "declined";
+  type Invitee = {
+    firstName: string;
+    lastName: string;
+    fullName: string;
+  };
+
+  type GuestInvitation = {
+    token: string;
+    displayName: string;
+    invitees: Invitee[];
+    status: GuestStatus;
+    confirmedGuests: number;
+    maxGuests: number;
+    companions: number;
+    phone: string | null;
+  };
+
+  const GUEST_PAGE_SIZE = 10;
+  const SONG_PAGE_SIZE = 10;
+
+  const loginSection = document.getElementById("admin-login") as HTMLElement;
+  const ADMIN_USERNAME = loginSection.dataset.adminUser || "admin";
+  const ADMIN_PASSWORD = loginSection.dataset.adminPass || "admin123";
+  const ADMIN_SESSION_KEY = "weddingAdminSession";
+
+  const adminContent = document.getElementById("admin-content") as HTMLElement;
+  const loginForm = document.getElementById("login-form") as HTMLFormElement;
+  const loginUser = document.getElementById("login-user") as HTMLInputElement;
+  const loginPass = document.getElementById("login-pass") as HTMLInputElement;
+  const loginError = document.getElementById(
+    "login-error",
+  ) as HTMLParagraphElement;
+
+  const statTotalInvitations = document.getElementById(
+    "stat-total-invitations",
+  ) as HTMLParagraphElement;
+  const statTotalGuests = document.getElementById(
+    "stat-total-guests",
+  ) as HTMLParagraphElement;
+  const statConfirmedGuests = document.getElementById(
+    "stat-confirmed-guests",
+  ) as HTMLParagraphElement;
+  const statPendingInvitations = document.getElementById(
+    "stat-pending-invitations",
+  ) as HTMLParagraphElement;
+
+  const guestTableBody = document.getElementById(
+    "guest-table-body",
+  ) as HTMLElement;
+  const newInvitationBtn = document.getElementById(
+    "new-invitation-btn",
+  ) as HTMLButtonElement;
+  const guestPrevBtn = document.getElementById(
+    "guest-prev",
+  ) as HTMLButtonElement;
+  const guestNextBtn = document.getElementById(
+    "guest-next",
+  ) as HTMLButtonElement;
+  const guestPageLabel = document.getElementById(
+    "guest-page-label",
+  ) as HTMLSpanElement;
+
+  const invitationFormWrap = document.getElementById(
+    "invitation-form-wrap",
+  ) as HTMLElement;
+  const invitationFormTitle = document.getElementById(
+    "invitation-form-title",
+  ) as HTMLHeadingElement;
+  const invitationForm = document.getElementById(
+    "invitation-form",
+  ) as HTMLFormElement;
+  const cancelInvitationBtn = document.getElementById(
+    "cancel-invitation-btn",
+  ) as HTMLButtonElement;
+  const saveInvitationBtn = document.getElementById(
+    "save-invitation-btn",
+  ) as HTMLButtonElement;
+
+  const invitationTokenInput = document.getElementById(
+    "invitation-token",
+  ) as HTMLInputElement;
+  const invitationPhoneInput = document.getElementById(
+    "invitation-phone",
+  ) as HTMLInputElement;
+  const invitationMaxGuestsInput = document.getElementById(
+    "invitation-max-guests",
+  ) as HTMLInputElement;
+  const invitationCompanionsInput = document.getElementById(
+    "invitation-companions",
+  ) as HTMLInputElement;
+  const invitationStatusInput = document.getElementById(
+    "invitation-status",
+  ) as HTMLSelectElement;
+  const invitationConfirmedGuestsInput = document.getElementById(
+    "invitation-confirmed-guests",
+  ) as HTMLInputElement;
+  const inviteesList = document.getElementById("invitees-list") as HTMLElement;
+
+  const photosCount = document.getElementById("photos-count") as HTMLElement;
+  const photosGrid = document.getElementById("photos-grid") as HTMLElement;
+  const photoUploadStatus = document.getElementById(
+    "photo-upload-status",
+  ) as HTMLElement;
+  const photoUploadToggleBtn = document.getElementById(
+    "photo-upload-toggle-btn",
+  ) as HTMLButtonElement;
+  const panelModal = document.getElementById("panel-modal") as HTMLElement;
+  const panelModalTitle = document.getElementById(
+    "panel-modal-title",
+  ) as HTMLHeadingElement;
+  const panelModalMessage = document.getElementById(
+    "panel-modal-message",
+  ) as HTMLParagraphElement;
+  const panelModalCancel = document.getElementById(
+    "panel-modal-cancel",
+  ) as HTMLButtonElement;
+  const panelModalConfirm = document.getElementById(
+    "panel-modal-confirm",
+  ) as HTMLButtonElement;
+
+  const songsTableBody = document.getElementById(
+    "songs-table-body",
+  ) as HTMLElement;
+  const songPrevBtn = document.getElementById("song-prev") as HTMLButtonElement;
+  const songNextBtn = document.getElementById("song-next") as HTMLButtonElement;
+  const songPageLabel = document.getElementById(
+    "song-page-label",
+  ) as HTMLSpanElement;
+
+  let editingToken: string | null = null;
+
+  let currentGuestRows: GuestInvitation[] = [];
+  let guestSortField:
+    | "displayName"
+    | "token"
+    | "status"
+    | "confirmedGuests"
+    | "maxGuests" = "displayName";
+  let guestSortDirection: "asc" | "desc" = "asc";
+  let guestPageIndex = 0;
+  let guestPageAnchors: Array<any | null> = [null];
+  let guestHasNext = false;
+
+  let songSortField: "title" | "artist" | "guestToken" | "createdAt" =
+    "createdAt";
+  let songSortDirection: "asc" | "desc" = "desc";
+  let songPageIndex = 0;
+  let songPageAnchors: Array<any | null> = [null];
+  let songHasNext = false;
+  let photoUploadEnabled = false;
+  let modalMode: "alert" | "confirm" | null = null;
+  let modalResolver: ((value: boolean) => void) | null = null;
+
+  const PHOTO_UPLOAD_SETTINGS_COLLECTION = "appSettings";
+  const PHOTO_UPLOAD_SETTINGS_DOC = "photoUpload";
+
+  function closePanelModal(value: boolean) {
+    panelModal.hidden = true;
+    const resolver = modalResolver;
+    modalResolver = null;
+    modalMode = null;
+    if (resolver) {
+      resolver(value);
+    }
+  }
+
+  function showAlertModal(
+    message: string,
+    title = "Aviso",
+    confirmLabel = "Aceptar",
+  ): Promise<void> {
+    panelModal.hidden = false;
+    panelModalTitle.textContent = title;
+    panelModalMessage.textContent = message;
+    panelModalCancel.hidden = true;
+    panelModalConfirm.textContent = confirmLabel;
+    modalMode = "alert";
+
+    return new Promise((resolve) => {
+      modalResolver = () => resolve();
+      panelModalConfirm.focus();
+    });
+  }
+
+  function showConfirmModal(
+    message: string,
+    options?: {
+      title?: string;
+      confirmLabel?: string;
+      cancelLabel?: string;
+    },
+  ): Promise<boolean> {
+    panelModal.hidden = false;
+    panelModalTitle.textContent = options?.title || "Confirmar";
+    panelModalMessage.textContent = message;
+    panelModalCancel.hidden = false;
+    panelModalCancel.textContent = options?.cancelLabel || "Cancelar";
+    panelModalConfirm.textContent = options?.confirmLabel || "Aceptar";
+    modalMode = "confirm";
+
+    return new Promise((resolve) => {
+      modalResolver = resolve;
+      panelModalConfirm.focus();
+    });
+  }
+
+  function updatePhotoUploadUi() {
+    if (photoUploadEnabled) {
+      photoUploadStatus.textContent = "Subida de fotos activada";
+      photoUploadStatus.classList.add("is-enabled");
+      photoUploadStatus.classList.remove("is-disabled");
+      photoUploadToggleBtn.textContent = "Desactivar subida";
+      return;
+    }
+
+    photoUploadStatus.textContent = "Subida de fotos desactivada";
+    photoUploadStatus.classList.add("is-disabled");
+    photoUploadStatus.classList.remove("is-enabled");
+    photoUploadToggleBtn.textContent = "Activar subida";
+  }
+
+  async function loadPhotoUploadSettings() {
+    try {
+      const snap = await getDoc(
+        doc(db, PHOTO_UPLOAD_SETTINGS_COLLECTION, PHOTO_UPLOAD_SETTINGS_DOC),
+      );
+
+      photoUploadEnabled = snap.exists()
+        ? Boolean(snap.data()?.enabled)
+        : false;
+    } catch {
+      photoUploadEnabled = false;
+    }
+
+    updatePhotoUploadUi();
+  }
+
+  async function togglePhotoUploadSettings() {
+    photoUploadToggleBtn.disabled = true;
+
+    try {
+      const nextValue = !photoUploadEnabled;
+      await setDoc(
+        doc(db, PHOTO_UPLOAD_SETTINGS_COLLECTION, PHOTO_UPLOAD_SETTINGS_DOC),
+        {
+          enabled: nextValue,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true },
+      );
+
+      photoUploadEnabled = nextValue;
+      updatePhotoUploadUi();
+    } catch {
+      await showAlertModal(
+        "No se pudo actualizar el estado de subida de fotos.",
+      );
+    } finally {
+      photoUploadToggleBtn.disabled = false;
+    }
+  }
+
+  const guestSortButtons = Array.from(
+    document.querySelectorAll("[data-guest-sort]"),
+  ) as HTMLButtonElement[];
+  const songSortButtons = Array.from(
+    document.querySelectorAll("[data-song-sort]"),
+  ) as HTMLButtonElement[];
+
+  function updateSortIndicators() {
+    guestSortButtons.forEach((button) => {
+      const isActive = button.dataset.guestSort === guestSortField;
+      button.classList.toggle("sort-active", isActive);
+      button.dataset.dir = isActive ? guestSortDirection : "";
+    });
+
+    songSortButtons.forEach((button) => {
+      const isActive = button.dataset.songSort === songSortField;
+      button.classList.toggle("sort-active", isActive);
+      button.dataset.dir = isActive ? songSortDirection : "";
+    });
+  }
+
+  function initNumberSteppers() {
+    document.querySelectorAll("[data-stepper-target]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const stepButton = button as HTMLButtonElement;
+        const targetId = stepButton.dataset.stepperTarget;
+        const action = stepButton.dataset.stepperAction;
+
+        if (!targetId || !action) {
+          return;
+        }
+
+        const input = document.getElementById(
+          targetId,
+        ) as HTMLInputElement | null;
+        if (!input) {
+          return;
+        }
+
+        const min = Number(input.min || "0");
+        const max = Number(input.max || "999");
+        const current = Number(input.value || "0");
+        const delta = action === "up" ? 1 : -1;
+        const nextValue = Math.min(max, Math.max(min, current + delta));
+
+        input.value = String(nextValue);
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+    });
+  }
+
+  function generateToken(): string {
+    return `inv-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  }
+
+  function formatStatus(status: GuestStatus) {
+    if (status === "confirmed") return "Confirmada";
+    if (status === "declined") return "Declinada";
+    return "Pendiente";
+  }
+
+  function normalizeInvitees(
+    invitees:
+      | Array<{ firstName?: string; lastName?: string; fullName?: string }>
+      | undefined,
+    fallbackName: string,
+  ): Invitee[] {
+    if (Array.isArray(invitees) && invitees.length > 0) {
+      return invitees
+        .map((person) => {
+          const firstName = (person.firstName || "").trim();
+          const lastName = (person.lastName || "").trim();
+          const fullName =
+            `${firstName} ${lastName}`.trim() || (person.fullName || "").trim();
+          if (!fullName) {
+            return null;
+          }
+          return {
+            firstName,
+            lastName,
+            fullName,
+          };
+        })
+        .filter((person): person is Invitee => person !== null);
+    }
+
+    const base = fallbackName.trim() || "Invitado";
+    const parts = base.split(/\s+/).filter(Boolean);
+    return [
+      {
+        firstName: parts[0] || base,
+        lastName: parts.slice(1).join(" "),
+        fullName: base,
+      },
+    ];
+  }
+
+  function buildDisplayName(invitees: Invitee[]): string {
+    if (invitees.length === 0) {
+      return "Invitación";
+    }
+
+    if (invitees.length === 1) {
+      return invitees[0].fullName;
+    }
+
+    return `${invitees[0].fullName} +${invitees.length - 1}`;
+  }
+
+  function renderInviteeInputs(count: number, seed: Invitee[] = []) {
+    const safeCount = Math.max(1, Math.min(20, count));
+    inviteesList.innerHTML = "";
+
+    for (let index = 0; index < safeCount; index++) {
+      const row = document.createElement("div");
+      row.className = "invitee-row";
+
+      const firstName = document.createElement("input");
+      firstName.type = "text";
+      firstName.required = true;
+      firstName.placeholder = `Nombre invitado ${index + 1}`;
+      firstName.title = `Nombre del invitado ${index + 1}`;
+      firstName.dataset.inviteeField = "firstName";
+      firstName.dataset.index = String(index);
+      firstName.value = seed[index]?.firstName || "";
+
+      const lastName = document.createElement("input");
+      lastName.type = "text";
+      lastName.required = true;
+      lastName.placeholder = `Apellido invitado ${index + 1}`;
+      lastName.title = `Apellido del invitado ${index + 1}`;
+      lastName.dataset.inviteeField = "lastName";
+      lastName.dataset.index = String(index);
+      lastName.value = seed[index]?.lastName || "";
+
+      row.appendChild(firstName);
+      row.appendChild(lastName);
+      inviteesList.appendChild(row);
+    }
+  }
+
+  function collectInviteesFromForm(): Invitee[] {
+    const rows = Array.from(inviteesList.querySelectorAll(".invitee-row"));
+    return rows.map((row) => {
+      const firstNameInput = row.querySelector(
+        "input[data-invitee-field='firstName']",
+      ) as HTMLInputElement;
+      const lastNameInput = row.querySelector(
+        "input[data-invitee-field='lastName']",
+      ) as HTMLInputElement;
+
+      const firstName = firstNameInput.value.trim();
+      const lastName = lastNameInput.value.trim();
+      const fullName = `${firstName} ${lastName}`.trim();
+
+      return { firstName, lastName, fullName };
+    });
+  }
+
+  function applyStatusRules() {
+    const maxGuests = Math.max(1, Number(invitationMaxGuestsInput.value) || 1);
+    invitationMaxGuestsInput.value = String(maxGuests);
+
+    const status = invitationStatusInput.value as GuestStatus;
+    let confirmedGuests = Math.max(
+      0,
+      Number(invitationConfirmedGuestsInput.value) || 0,
+    );
+
+    if (status === "confirmed") {
+      confirmedGuests = maxGuests;
+    }
+
+    if (status === "declined") {
+      confirmedGuests = 0;
+    }
+
+    invitationConfirmedGuestsInput.value = String(
+      Math.min(maxGuests, confirmedGuests),
+    );
+  }
+
+  function syncGuestDistribution() {
+    const seed = collectInviteesFromForm();
+
+    const maxGuests = Math.max(1, Number(invitationMaxGuestsInput.value) || 1);
+    let companions = Math.max(0, Number(invitationCompanionsInput.value) || 0);
+
+    if (companions > maxGuests - 1) {
+      companions = maxGuests - 1;
+    }
+
+    invitationMaxGuestsInput.value = String(maxGuests);
+    invitationCompanionsInput.value = String(companions);
+
+    const namedGuests = Math.max(1, maxGuests - companions);
+    renderInviteeInputs(namedGuests, seed);
+    applyStatusRules();
+  }
+
+  function resetInvitationForm() {
+    editingToken = null;
+    invitationFormTitle.textContent = "Nueva invitación";
+    invitationTokenInput.disabled = false;
+    invitationTokenInput.value = "";
+    invitationPhoneInput.value = "";
+    invitationMaxGuestsInput.value = "2";
+    invitationCompanionsInput.value = "0";
+    invitationStatusInput.value = "pending";
+    invitationConfirmedGuestsInput.value = "0";
+    saveInvitationBtn.textContent = "Guardar";
+    renderInviteeInputs(2);
+  }
+
+  function openInvitationForm(
+    mode: "create" | "edit",
+    guest?: GuestInvitation,
+  ) {
+    invitationFormWrap.hidden = false;
+
+    if (mode === "create") {
+      resetInvitationForm();
+      return;
+    }
+
+    if (!guest) {
+      return;
+    }
+
+    editingToken = guest.token;
+    invitationFormTitle.textContent = "Editar invitación";
+    invitationTokenInput.value = guest.token;
+    invitationTokenInput.disabled = true;
+    invitationPhoneInput.value = guest.phone || "";
+    invitationMaxGuestsInput.value = String(guest.maxGuests);
+    invitationCompanionsInput.value = String(guest.companions || 0);
+    invitationStatusInput.value = guest.status;
+    invitationConfirmedGuestsInput.value = String(guest.confirmedGuests);
+    saveInvitationBtn.textContent = "Actualizar";
+    renderInviteeInputs(
+      Math.max(1, guest.maxGuests - (guest.companions || 0)),
+      guest.invitees,
+    );
+  }
+
+  function closeInvitationForm() {
+    invitationFormWrap.hidden = true;
+    resetInvitationForm();
+  }
+
+  async function loadStats() {
+    const guestSnap = await getDocs(collection(db, "guests"));
+
+    const guests = guestSnap.docs.map((docSnap) => {
+      const data = docSnap.data() as {
+        maxGuests?: number;
+        confirmedGuests?: number;
+        status?: GuestStatus;
+      };
+
+      return {
+        maxGuests: Math.max(1, Number(data.maxGuests) || 1),
+        confirmedGuests: Math.max(0, Number(data.confirmedGuests) || 0),
+        status: (data.status || "pending") as GuestStatus,
+      };
+    });
+
+    const totalInvitations = guests.length;
+    const totalGuests = guests.reduce((acc, guest) => acc + guest.maxGuests, 0);
+    const confirmedGuests = guests.reduce(
+      (acc, guest) => acc + Math.min(guest.confirmedGuests, guest.maxGuests),
+      0,
+    );
+    const pendingInvitations = guests
+      .filter((guest) => guest.status === "pending")
+      .reduce((acc, guest) => acc + guest.maxGuests, 0);
+
+    statTotalInvitations.textContent = String(totalInvitations);
+    statTotalGuests.textContent = String(totalGuests);
+    statConfirmedGuests.textContent = String(confirmedGuests);
+    statPendingInvitations.textContent = String(pendingInvitations);
+  }
+
+  function updateGuestPaginationUi() {
+    guestPrevBtn.disabled = guestPageIndex === 0;
+    guestNextBtn.disabled = !guestHasNext;
+    guestPageLabel.textContent = `Página ${guestPageIndex + 1}`;
+  }
+
+  function createActionIcon(src: string, alt: string) {
+    const icon = document.createElement("img");
+    icon.className = "action-icon";
+    icon.src = src;
+    icon.alt = alt;
+    icon.width = 18;
+    icon.height = 18;
+    icon.loading = "lazy";
+    icon.decoding = "async";
+    return icon;
+  }
+
+  async function loadGuestPage() {
+    const anchor = guestPageAnchors[guestPageIndex];
+
+    const constraints: any[] = [
+      orderBy(guestSortField, guestSortDirection),
+      limit(GUEST_PAGE_SIZE + 1),
+    ];
+
+    if (anchor) {
+      constraints.push(startAfter(anchor));
+    }
+
+    const guestSnap = await getDocs(
+      query(collection(db, "guests"), ...constraints),
+    );
+
+    guestHasNext = guestSnap.docs.length > GUEST_PAGE_SIZE;
+    const pageDocs = guestHasNext
+      ? guestSnap.docs.slice(0, GUEST_PAGE_SIZE)
+      : guestSnap.docs;
+    const lastVisible =
+      pageDocs.length > 0 ? pageDocs[pageDocs.length - 1] : null;
+    guestPageAnchors[guestPageIndex + 1] = lastVisible;
+
+    currentGuestRows = pageDocs.map((docSnap: any) => {
+      const data = docSnap.data() as {
+        name?: string;
+        displayName?: string;
+        invitees?: Array<{
+          firstName?: string;
+          lastName?: string;
+          fullName?: string;
+        }>;
+        status?: GuestStatus;
+        confirmedGuests?: number;
+        maxGuests?: number;
+        companions?: number;
+        phone?: string;
+      };
+
+      const invitees = normalizeInvitees(
+        data.invitees,
+        data.name || data.displayName || "Invitado",
+      );
+      const maxGuests = Math.max(
+        1,
+        Number(data.maxGuests) || invitees.length || 1,
+      );
+      const confirmedGuests = Math.min(
+        maxGuests,
+        Math.max(0, Number(data.confirmedGuests) || 0),
+      );
+      const companions = Math.max(
+        0,
+        Number(data.companions ?? maxGuests - invitees.length) || 0,
+      );
+
+      return {
+        token: docSnap.id,
+        displayName: (
+          data.displayName ||
+          buildDisplayName(invitees) ||
+          data.name ||
+          "Invitación"
+        ).trim(),
+        invitees,
+        status: (data.status || "pending") as GuestStatus,
+        confirmedGuests,
+        maxGuests,
+        companions,
+        phone: data.phone || null,
+      };
+    });
+
+    renderGuestRows();
+    updateGuestPaginationUi();
+  }
+
+  function renderGuestRows() {
+    guestTableBody.innerHTML = "";
+
+    if (currentGuestRows.length === 0) {
+      guestTableBody.innerHTML = `<tr><td colspan="7" class="empty-table-state"><div class="empty-table-message">No hay resultados para esta página.</div></td></tr>`;
+      return;
+    }
+
+    currentGuestRows.forEach((guest) => {
+      const row = document.createElement("tr");
+
+      const nameCell = document.createElement("td");
+      nameCell.textContent = guest.displayName;
+
+      const tokenCell = document.createElement("td");
+      tokenCell.textContent = guest.token;
+
+      const statusCell = document.createElement("td");
+      const statusPill = document.createElement("span");
+      statusPill.className = `status-pill status-${guest.status}`;
+      statusPill.textContent = formatStatus(guest.status);
+      statusCell.appendChild(statusPill);
+
+      const confirmedCell = document.createElement("td");
+      confirmedCell.textContent = String(guest.confirmedGuests);
+
+      const maxCell = document.createElement("td");
+      maxCell.textContent = String(guest.maxGuests);
+
+      const companionsCell = document.createElement("td");
+      companionsCell.textContent = String(guest.companions || 0);
+
+      const actionsCell = document.createElement("td");
+      const actions = document.createElement("div");
+      actions.className = "row-actions";
+
+      const copyBtn = document.createElement("button");
+      copyBtn.className = "action-btn copy";
+      copyBtn.type = "button";
+      copyBtn.appendChild(createActionIcon("/copy.svg", "Copiar"));
+      copyBtn.title = "Copiar enlace de invitación";
+      copyBtn.setAttribute("aria-label", "Copiar enlace de invitación");
+      copyBtn.addEventListener("click", () =>
+        copyInvitationLink(guest.token, copyBtn),
+      );
+
+      const editBtn = document.createElement("button");
+      editBtn.className = "action-btn edit";
+      editBtn.type = "button";
+      editBtn.appendChild(createActionIcon("/edit.svg", "Editar"));
+      editBtn.title = "Editar invitación";
+      editBtn.setAttribute("aria-label", "Editar invitación");
+      editBtn.addEventListener("click", () =>
+        openInvitationForm("edit", guest),
+      );
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "action-btn danger";
+      deleteBtn.type = "button";
+      deleteBtn.appendChild(createActionIcon("/delete.svg", "Borrar"));
+      deleteBtn.title = "Borrar invitación";
+      deleteBtn.setAttribute("aria-label", "Borrar invitación");
+      deleteBtn.addEventListener("click", () => deleteInvitation(guest.token));
+
+      actions.appendChild(copyBtn);
+      actions.appendChild(editBtn);
+      actions.appendChild(deleteBtn);
+      actionsCell.appendChild(actions);
+
+      row.appendChild(nameCell);
+      row.appendChild(tokenCell);
+      row.appendChild(statusCell);
+      row.appendChild(confirmedCell);
+      row.appendChild(maxCell);
+      row.appendChild(companionsCell);
+      row.appendChild(actionsCell);
+      guestTableBody.appendChild(row);
+    });
+  }
+
+  function updateSongPaginationUi() {
+    songPrevBtn.disabled = songPageIndex === 0;
+    songNextBtn.disabled = !songHasNext;
+    songPageLabel.textContent = `Página ${songPageIndex + 1}`;
+  }
+
+  async function loadSongPage() {
+    const anchor = songPageAnchors[songPageIndex];
+
+    const constraints: any[] = [
+      orderBy(songSortField, songSortDirection),
+      limit(SONG_PAGE_SIZE + 1),
+    ];
+
+    if (anchor) {
+      constraints.push(startAfter(anchor));
+    }
+
+    const songsSnap = await getDocs(
+      query(collection(db, "songRequests"), ...constraints),
+    );
+
+    songHasNext = songsSnap.docs.length > SONG_PAGE_SIZE;
+    const pageDocs = songHasNext
+      ? songsSnap.docs.slice(0, SONG_PAGE_SIZE)
+      : songsSnap.docs;
+    const lastVisible =
+      pageDocs.length > 0 ? pageDocs[pageDocs.length - 1] : null;
+    songPageAnchors[songPageIndex + 1] = lastVisible;
+
+    songsTableBody.innerHTML = "";
+
+    if (pageDocs.length === 0) {
+      songsTableBody.innerHTML = `<tr><td colspan="5" class="empty-table-state"><div class="empty-table-message">No hay sugerencias todavía.</div></td></tr>`;
+      updateSongPaginationUi();
+      return;
+    }
+
+    pageDocs.forEach((docSnap: any) => {
+      const data = docSnap.data() as {
+        title?: string;
+        artist?: string | null;
+        youtubeUrl?: string | null;
+        guestToken?: string | null;
+      };
+
+      const row = document.createElement("tr");
+
+      const titleCell = document.createElement("td");
+      titleCell.textContent = data.title || "-";
+
+      const artistCell = document.createElement("td");
+      artistCell.textContent = data.artist || "-";
+
+      const youtubeCell = document.createElement("td");
+      if (data.youtubeUrl) {
+        const link = document.createElement("a");
+        link.href = data.youtubeUrl;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = "Abrir";
+        youtubeCell.appendChild(link);
+      } else {
+        youtubeCell.textContent = "-";
+      }
+
+      const tokenCell = document.createElement("td");
+      tokenCell.textContent = data.guestToken || "-";
+
+      const actionsCell = document.createElement("td");
+      actionsCell.className = "songs-action-cell";
+
+      const deleteSongBtn = document.createElement("button");
+      deleteSongBtn.type = "button";
+      deleteSongBtn.className = "action-btn danger";
+      deleteSongBtn.appendChild(createActionIcon("/delete.svg", "Borrar"));
+      deleteSongBtn.title = "Borrar canción";
+      deleteSongBtn.setAttribute("aria-label", "Borrar canción");
+      deleteSongBtn.addEventListener("click", () =>
+        deleteSongSuggestion(docSnap.id),
+      );
+
+      actionsCell.appendChild(deleteSongBtn);
+
+      row.appendChild(titleCell);
+      row.appendChild(artistCell);
+      row.appendChild(youtubeCell);
+      row.appendChild(tokenCell);
+      row.appendChild(actionsCell);
+      songsTableBody.appendChild(row);
+    });
+
+    updateSongPaginationUi();
+  }
+
+  async function saveInvitation(event: SubmitEvent) {
+    event.preventDefault();
+
+    const rawToken = invitationTokenInput.value.trim();
+    const token = editingToken || rawToken || generateToken();
+    const phone = invitationPhoneInput.value.trim();
+    const maxGuests = Math.max(1, Number(invitationMaxGuestsInput.value) || 1);
+    let companions = Math.max(0, Number(invitationCompanionsInput.value) || 0);
+    if (companions > maxGuests - 1) {
+      companions = maxGuests - 1;
+      invitationCompanionsInput.value = String(companions);
+    }
+    const status = invitationStatusInput.value as GuestStatus;
+
+    const invitees = collectInviteesFromForm().filter(
+      (invitee) => invitee.firstName && invitee.lastName,
+    );
+
+    const namedGuestsExpected = Math.max(1, maxGuests - companions);
+
+    if (invitees.length !== namedGuestsExpected) {
+      await showAlertModal(
+        "Debes completar nombre y apellido para todos los invitados principales de la invitación.",
+      );
+      return;
+    }
+
+    let confirmedGuests = Math.max(
+      0,
+      Number(invitationConfirmedGuestsInput.value) || 0,
+    );
+
+    if (status === "confirmed") {
+      confirmedGuests = maxGuests;
+    } else if (status === "declined") {
+      confirmedGuests = 0;
+    } else {
+      confirmedGuests = Math.min(maxGuests, confirmedGuests);
+    }
+
+    const displayName = buildDisplayName(invitees);
+
+    saveInvitationBtn.disabled = true;
+    saveInvitationBtn.textContent = editingToken
+      ? "Actualizando..."
+      : "Guardando...";
+
+    try {
+      const payload = {
+        token,
+        name: displayName,
+        displayName,
+        invitees,
+        phone: phone || null,
+        maxGuests,
+        companions,
+        status,
+        confirmedGuests,
+        updatedAt: serverTimestamp(),
+      };
+
+      if (editingToken) {
+        await updateDoc(doc(db, "guests", token), payload);
+      } else {
+        await setDoc(doc(db, "guests", token), {
+          ...payload,
+          invitedAt: serverTimestamp(),
+        });
+      }
+
+      closeInvitationForm();
+      await Promise.all([loadStats(), loadGuestPage()]);
+    } catch {
+      await showAlertModal("No se pudo guardar la invitación.");
+    } finally {
+      saveInvitationBtn.disabled = false;
+      saveInvitationBtn.textContent = editingToken ? "Actualizar" : "Guardar";
+    }
+  }
+
+  async function deleteInvitation(token: string) {
+    const accepted = await showConfirmModal(
+      "¿Seguro que deseas borrar esta invitación? Esta acción no se puede deshacer.",
+      { confirmLabel: "Borrar" },
+    );
+
+    if (!accepted) {
+      return;
+    }
+
+    try {
+      await deleteDoc(doc(db, "guests", token));
+      await Promise.all([loadStats(), loadGuestPage()]);
+    } catch {
+      await showAlertModal("No se pudo borrar la invitación.");
+    }
+  }
+
+  async function deleteSongSuggestion(songId: string) {
+    const accepted = await showConfirmModal(
+      "¿Seguro que deseas borrar esta sugerencia de canción?",
+      { confirmLabel: "Borrar" },
+    );
+
+    if (!accepted) {
+      return;
+    }
+
+    try {
+      await deleteDoc(doc(db, "songRequests", songId));
+      await loadSongPage();
+    } catch {
+      await showAlertModal("No se pudo borrar la canción.");
+    }
+  }
+
+  function buildInvitationLink(token: string): string {
+    const url = new URL(window.location.href);
+    url.pathname = "/";
+    url.search = `?codigo=${encodeURIComponent(token)}`;
+    url.hash = "";
+    return url.toString();
+  }
+
+  async function copyInvitationLink(
+    token: string,
+    triggerButton: HTMLButtonElement,
+  ) {
+    const link = buildInvitationLink(token);
+
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(link);
+      } else {
+        const helperInput = document.createElement("textarea");
+        helperInput.value = link;
+        helperInput.setAttribute("readonly", "true");
+        helperInput.style.position = "fixed";
+        helperInput.style.opacity = "0";
+        document.body.appendChild(helperInput);
+        helperInput.select();
+        document.execCommand("copy");
+        document.body.removeChild(helperInput);
+      }
+
+      const previousTitle = triggerButton.title;
+      triggerButton.classList.add("is-copied");
+      triggerButton.title = "Copiado";
+      window.setTimeout(() => {
+        triggerButton.classList.remove("is-copied");
+        triggerButton.title = previousTitle;
+      }, 1200);
+    } catch {
+      await showAlertModal(
+        "No se pudo copiar el link. Copia este enlace manualmente:\n" + link,
+        "No se pudo copiar",
+      );
+    }
+  }
+
+  async function loadPhotos() {
+    const photosRef = ref(storage, "photos");
+    const listed = await listAll(photosRef);
+    const entries = await Promise.all(
+      listed.items.map(async (item: any) => {
+        const url = await getDownloadURL(item);
+        return {
+          ref: item,
+          url,
+          name: item.name || "foto",
+        };
+      }),
+    );
+
+    photosGrid.innerHTML = "";
+    photosGrid.classList.remove("is-empty");
+
+    if (entries.length === 0) {
+      photosCount.textContent = "No hay fotos subidas todavía.";
+      photosGrid.classList.add("is-empty");
+      photosGrid.innerHTML = `<div class="empty-state">Las fotos que suban tus invitados aparecerán aquí.</div>`;
+      return;
+    }
+
+    photosCount.textContent = `${entries.length} foto(s) cargada(s)`;
+
+    entries.forEach((entry) => {
+      const wrapper = document.createElement("div");
+      wrapper.className = "photo-item";
+
+      const card = createPhotoDisplayCard({
+        src: entry.url,
+        alt: "Foto subida por invitado",
+        showDownload: true,
+        downloadHref: entry.url,
+        downloadName: entry.name,
+        onDelete: async () => {
+          const confirmed = await showConfirmModal(
+            "¿Seguro que deseas borrar esta foto?",
+            { confirmLabel: "Borrar" },
+          );
+          if (!confirmed) {
+            return;
+          }
+
+          try {
+            await deleteObject(entry.ref);
+            await loadPhotos();
+          } catch {
+            await showAlertModal("No se pudo borrar la foto.");
+          }
+        },
+      });
+
+      wrapper.appendChild(card);
+      photosGrid.appendChild(wrapper);
+    });
+  }
+
+  function isAuthenticated(): boolean {
+    return sessionStorage.getItem(ADMIN_SESSION_KEY) === "ok";
+  }
+
+  async function refreshPanelData() {
+    await Promise.all([
+      loadStats(),
+      loadGuestPage(),
+      loadSongPage(),
+      loadPhotoUploadSettings(),
+      loadPhotos(),
+    ]);
+  }
+
+  function showAdminContent() {
+    loginSection.hidden = true;
+    adminContent.hidden = false;
+
+    refreshPanelData().catch(() => {
+      photosCount.textContent = "No se pudo cargar la información del panel.";
+      guestTableBody.innerHTML = `<tr><td colspan="7" class="empty-table-state"><div class="empty-table-message">No se pudieron cargar invitaciones.</div></td></tr>`;
+      songsTableBody.innerHTML = `<tr><td colspan="5" class="empty-table-state"><div class="empty-table-message">No se pudieron cargar canciones.</div></td></tr>`;
+    });
+  }
+
+  loginForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    const user = loginUser.value.trim();
+    const pass = loginPass.value;
+
+    if (user === ADMIN_USERNAME && pass === ADMIN_PASSWORD) {
+      sessionStorage.setItem(ADMIN_SESSION_KEY, "ok");
+      loginError.textContent = "";
+      showAdminContent();
+      return;
+    }
+
+    loginError.textContent = "Usuario o clave inválidos.";
+  });
+
+  invitationMaxGuestsInput.addEventListener("input", syncGuestDistribution);
+  invitationCompanionsInput.addEventListener("input", syncGuestDistribution);
+
+  invitationStatusInput.addEventListener("change", applyStatusRules);
+
+  invitationForm.addEventListener("submit", saveInvitation);
+
+  newInvitationBtn.addEventListener("click", () =>
+    openInvitationForm("create"),
+  );
+  cancelInvitationBtn.addEventListener("click", closeInvitationForm);
+
+  guestPrevBtn.addEventListener("click", async () => {
+    if (guestPageIndex === 0) {
+      return;
+    }
+    guestPageIndex -= 1;
+    await loadGuestPage();
+  });
+
+  guestNextBtn.addEventListener("click", async () => {
+    if (!guestHasNext) {
+      return;
+    }
+    guestPageIndex += 1;
+    await loadGuestPage();
+  });
+
+  songPrevBtn.addEventListener("click", async () => {
+    if (songPageIndex === 0) {
+      return;
+    }
+    songPageIndex -= 1;
+    await loadSongPage();
+  });
+
+  songNextBtn.addEventListener("click", async () => {
+    if (!songHasNext) {
+      return;
+    }
+    songPageIndex += 1;
+    await loadSongPage();
+  });
+
+  photoUploadToggleBtn.addEventListener("click", async () => {
+    await togglePhotoUploadSettings();
+  });
+
+  panelModalConfirm.addEventListener("click", () => {
+    if (!modalMode) {
+      return;
+    }
+    closePanelModal(true);
+  });
+
+  panelModalCancel.addEventListener("click", () => {
+    if (!modalMode) {
+      return;
+    }
+    closePanelModal(false);
+  });
+
+  panelModal.addEventListener("click", (event) => {
+    if (event.target !== panelModal || !modalMode) {
+      return;
+    }
+    if (modalMode === "confirm") {
+      closePanelModal(false);
+      return;
+    }
+    closePanelModal(true);
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" || panelModal.hidden || !modalMode) {
+      return;
+    }
+    if (modalMode === "confirm") {
+      closePanelModal(false);
+      return;
+    }
+    closePanelModal(true);
+  });
+
+  document.querySelectorAll("[data-guest-sort]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const field = (button as HTMLButtonElement).dataset.guestSort as
+        | "displayName"
+        | "token"
+        | "status"
+        | "confirmedGuests"
+        | "maxGuests";
+
+      if (guestSortField === field) {
+        guestSortDirection = guestSortDirection === "asc" ? "desc" : "asc";
+      } else {
+        guestSortField = field;
+        guestSortDirection = "asc";
+      }
+
+      guestPageIndex = 0;
+      guestPageAnchors = [null];
+      updateSortIndicators();
+      await loadGuestPage();
+    });
+  });
+
+  document.querySelectorAll("[data-song-sort]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const field = (button as HTMLButtonElement).dataset.songSort as
+        | "title"
+        | "artist"
+        | "guestToken"
+        | "createdAt";
+
+      if (songSortField === field) {
+        songSortDirection = songSortDirection === "asc" ? "desc" : "asc";
+      } else {
+        songSortField = field;
+        songSortDirection = "asc";
+      }
+
+      songPageIndex = 0;
+      songPageAnchors = [null];
+      updateSortIndicators();
+      await loadSongPage();
+    });
+  });
+
+  initNumberSteppers();
+  updateSortIndicators();
+
+  resetInvitationForm();
+
+  if (isAuthenticated()) {
+    showAdminContent();
+  }
+</script>

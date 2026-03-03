@@ -1,5 +1,5 @@
 import { defineConfig } from 'astro/config';
-import basicSsl from '@vitejs/plugin-basic-ssl';
+import mkcert from 'vite-plugin-mkcert';
 
 // https://astro.build/config
 export default defineConfig({
@@ -8,9 +8,12 @@ export default defineConfig({
     host: true,
   },
   vite: {
-    plugins: [basicSsl()],
+    plugins: [mkcert()],
     server: {
       host: true,
+      https: true,
+    },
+    preview: {
       https: true,
     },
   },

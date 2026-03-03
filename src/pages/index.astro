@@ -87,7 +87,12 @@ const marqueePhotos = [...galleryPhotos, ...galleryPhotos];
       aria-label="Reproducir música"
       aria-pressed="false">▶</button
     >
-    <audio id="background-audio" loop preload="none" playsinline></audio>
+    <audio
+      id="background-audio"
+      src="/audio/boda-civil.mp3"
+      loop
+      preload="none"
+      playsinline></audio>
 
     <!-- Hero -->
     <section id="portada" class="hero">
@@ -313,8 +318,6 @@ const marqueePhotos = [...galleryPhotos, ...galleryPhotos];
   .app-shell {
     position: relative;
     z-index: 4;
-    margin-top: 100vh;
-    margin-top: 100svh;
     background: var(--bg);
     padding: 1.35rem 0 2.8rem;
     display: grid;
@@ -789,6 +792,19 @@ const marqueePhotos = [...galleryPhotos, ...galleryPhotos];
   }
   .action-decline:hover {
     background: #a54242;
+  }
+
+  .action-host {
+    width: 100%;
+    min-width: 0;
+    margin-inline: auto;
+    background: var(--surface);
+    color: var(--primary);
+    border-color: var(--primary);
+  }
+  .action-host:hover {
+    background: var(--primary-soft);
+    border-color: var(--primary);
   }
 
   .event-actions-status {
