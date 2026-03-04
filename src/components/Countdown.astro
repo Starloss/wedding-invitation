@@ -3,7 +3,7 @@
 const weddingDate = "2026-09-12T17:00:00";
 ---
 
-<div class="countdown-container">
+<div class="countdown-container" data-wedding-date={weddingDate}>
   <p class="countdown-kicker">Para nuestra boda</p>
   <h2>Cuenta regresiva</h2>
   <div class="countdown" id="countdown">
@@ -129,7 +129,9 @@ const weddingDate = "2026-09-12T17:00:00";
   }
 </style>
 
-<script define:vars={{ weddingDate }}>
+<script>
+  const container = document.querySelector<HTMLElement>(".countdown-container");
+  const weddingDate = container?.dataset.weddingDate ?? "";
   const target = new Date(weddingDate).getTime();
 
   const daysEl = document.getElementById("days");
@@ -137,7 +139,7 @@ const weddingDate = "2026-09-12T17:00:00";
   const minutesEl = document.getElementById("minutes");
   const secondsEl = document.getElementById("seconds");
 
-  function pad(n) {
+  function pad(n: number) {
     return String(n).padStart(2, "0");
   }
 
@@ -165,5 +167,8 @@ const weddingDate = "2026-09-12T17:00:00";
   }
 
   tick();
-  setInterval(tick, 1000);
+  const intervalId = setInterval(tick, 1000);
+  window.addEventListener("beforeunload", () => clearInterval(intervalId), {
+    once: true,
+  });
 </script>

@@ -35,29 +35,13 @@ const calParams = new URLSearchParams({
 const calendarEventUrl =
   "https://calendar.google.com/calendar/render?" + calParams.toString();
 
-// Demo gallery: CSS gradient placeholders — no real photos
-const PALETTE = [
-  "#d4c5b0",
-  "#c2b89a",
-  "#b8a98c",
-  "#cfd6c2",
-  "#bcc9b0",
-  "#d6c9b6",
-  "#c8bda8",
-  "#d0d8c8",
-  "#c0b4a0",
-  "#ccd4be",
-  "#c8bba6",
-  "#d2cbbf",
-  "#bab0a2",
-  "#d8d0c4",
-  "#c4bdb0",
-  "#cac0b4",
-];
-const galleryPhotos = PALETTE.map((bg, idx) => ({
-  bg,
-  label: "Foto " + (idx + 1),
+// Hero & gallery photos
+const heroBackgroundPhoto = "/fotos/portada.jpg";
+const galleryPhotos = [1, 2, 3, 4].map((n) => ({
+  src: `/fotos/${n}.jpg`,
+  alt: `Foto ${n}`,
 }));
+// Duplicar una vez en HTML para el loop CSS infinito (4 archivos únicos, 8 nodos)
 const marqueePhotos = [...galleryPhotos, ...galleryPhotos];
 ---
 
@@ -96,7 +80,10 @@ const marqueePhotos = [...galleryPhotos, ...galleryPhotos];
 
     <!-- Hero -->
     <section id="portada" class="hero">
-      <div class="hero-image-placeholder">
+      <div
+        class="hero-image-placeholder"
+        style={`--hero-bg-image: url('${heroBackgroundPhoto}')`}
+      >
         <img
           src="/hojas_portada_izquierda_superior.svg"
           alt=""
@@ -237,21 +224,14 @@ const marqueePhotos = [...galleryPhotos, ...galleryPhotos];
           <div class="gallery-carousel" role="list" aria-label="Galería demo">
             <div class="gallery-track">
               {
-                marqueePhotos.map((photo) => (
-                  <figure
-                    class="gallery-photo"
-                    role="listitem"
-                    style={`background: ${photo.bg};`}
-                  >
-                    <span class="gallery-placeholder-label">{photo.label}</span>
+                marqueePhotos.map((photo, index) => (
+                  <figure class="gallery-photo" role="listitem">
+                    <img src={photo.src} alt={photo.alt} loading="eager" />
                   </figure>
                 ))
               }
             </div>
           </div>
-          <p class="gallery-demo-note">
-            🎭 Demo — las fotos reales se mostrarían aquí
-          </p>
         </div>
       </section>
 
@@ -391,7 +371,7 @@ const marqueePhotos = [...galleryPhotos, ...galleryPhotos];
     border-radius: 0;
     background:
       linear-gradient(180deg, rgba(66, 49, 39, 0.22), rgba(66, 49, 39, 0.62)),
-      linear-gradient(135deg, #8f9b7a, #7f5d49);
+      var(--hero-bg-image, linear-gradient(135deg, #8f9b7a, #7f5d49));
     background-position: center;
     background-size: cover;
     display: flex;
@@ -409,7 +389,6 @@ const marqueePhotos = [...galleryPhotos, ...galleryPhotos];
     opacity: 0.85;
     z-index: 1;
     transform-origin: center;
-    will-change: transform;
   }
 
   .hero-ornament-top {
@@ -830,21 +809,11 @@ const marqueePhotos = [...galleryPhotos, ...galleryPhotos];
   /* ── Gallery ───────────────────────────────────────────── */
   .gallery-carousel {
     margin-top: 0.95rem;
-    overflow-x: auto;
-    overflow-y: hidden;
+    overflow: hidden;
     border: 1px solid #e7d9c8;
     background: #f7eee3;
     padding: 0.75rem;
     max-width: 100%;
-    cursor: grab;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
-  .gallery-carousel::-webkit-scrollbar {
-    display: none;
-  }
-  .gallery-carousel.is-dragging {
-    cursor: grabbing;
   }
 
   .gallery-quote-wrap {
@@ -887,7 +856,18 @@ const marqueePhotos = [...galleryPhotos, ...galleryPhotos];
     display: flex;
     width: max-content;
     gap: 0.85rem;
-    will-change: transform;
+    animation: gallery-scroll 28s linear infinite;
+  }
+  .gallery-track:hover {
+    animation-play-state: paused;
+  }
+  @keyframes gallery-scroll {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
   }
 
   .gallery-photo {
@@ -895,21 +875,18 @@ const marqueePhotos = [...galleryPhotos, ...galleryPhotos];
     max-width: 90vw;
     min-height: 370px;
     border-radius: 0;
+    background: #f3e7d9;
     border: 1px solid #e7d9c8;
     overflow: hidden;
     box-shadow: var(--shadow-sm);
     flex: 0 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
 
-  .gallery-placeholder-label {
-    color: rgba(80, 60, 45, 0.35);
-    font-size: 0.85rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    user-select: none;
+  .gallery-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
   }
 
   .gallery-demo-note {
@@ -1003,6 +980,7 @@ const marqueePhotos = [...galleryPhotos, ...galleryPhotos];
     line-height: 0;
     background: var(--bg);
     margin-block: 0.1rem;
+    will-change: transform;
   }
   .section-divider img {
     width: 100%;
@@ -1010,7 +988,6 @@ const marqueePhotos = [...galleryPhotos, ...galleryPhotos];
     object-fit: cover;
     display: block;
     opacity: 0.9;
-    will-change: transform;
     animation: divider-wave 7.2s ease-in-out infinite;
   }
   .section-divider-alt img {
@@ -1620,90 +1597,6 @@ const marqueePhotos = [...galleryPhotos, ...galleryPhotos];
     });
   }
 
-  // ── Gallery drag-scroll ───────────────────────────────────────────────────
-  function initGalleryDrag() {
-    const carousel = document.querySelector(
-      ".gallery-carousel",
-    ) as HTMLElement | null;
-    const track = carousel?.querySelector(
-      ".gallery-track",
-    ) as HTMLElement | null;
-    if (!carousel || !track) return;
-
-    let isDragging = false,
-      startX = 0,
-      initScroll = 0;
-    let autoFrame = 0,
-      pausedUntil = 0,
-      remainder = 0,
-      loopReady = false;
-
-    const loopWidth = () => track.scrollWidth / 2;
-
-    const normalize = () => {
-      const lw = loopWidth();
-      if (!lw) return;
-      const max = track.scrollWidth - carousel.clientWidth;
-      if (max <= 1) return;
-      while (carousel.scrollLeft <= 0) carousel.scrollLeft += lw;
-      while (carousel.scrollLeft >= max) carousel.scrollLeft -= lw;
-    };
-
-    const initLoop = () => {
-      if (loopReady) return;
-      const lw = loopWidth();
-      if (!lw) return;
-      if (track.scrollWidth - carousel.clientWidth <= 1) return;
-      carousel.scrollLeft = lw;
-      loopReady = true;
-      normalize();
-    };
-
-    const step = () => {
-      initLoop();
-      const now = performance.now();
-      const max = track.scrollWidth - carousel.clientWidth;
-      if (max > 1 && !isDragging && now >= pausedUntil) {
-        remainder += 0.42;
-        const delta = Math.trunc(remainder);
-        if (delta) {
-          carousel.scrollLeft += delta;
-          remainder -= delta;
-          normalize();
-        }
-      }
-      autoFrame = requestAnimationFrame(step);
-    };
-    autoFrame = requestAnimationFrame(step);
-
-    carousel.addEventListener("pointerdown", (e) => {
-      initLoop();
-      isDragging = true;
-      startX = e.clientX;
-      initScroll = carousel.scrollLeft;
-      carousel.classList.add("is-dragging");
-      carousel.setPointerCapture(e.pointerId);
-    });
-    carousel.addEventListener("pointermove", (e) => {
-      if (!isDragging) return;
-      carousel.scrollLeft = initScroll - (e.clientX - startX);
-      normalize();
-    });
-    const stopDrag = () => {
-      if (!isDragging) return;
-      isDragging = false;
-      carousel.classList.remove("is-dragging");
-      pausedUntil = performance.now() + 650;
-    };
-    carousel.addEventListener("pointerup", stopDrag);
-    carousel.addEventListener("pointercancel", stopDrag);
-    carousel.addEventListener("pointerleave", stopDrag);
-    carousel.addEventListener("scroll", normalize, { passive: true });
-    window.addEventListener("beforeunload", () =>
-      cancelAnimationFrame(autoFrame),
-    );
-  }
-
   // ── Event action buttons → scroll to RSVP ────────────────────────────────
   function initEventActions() {
     const go = (action: "confirm" | "decline") => {
@@ -1738,6 +1631,5 @@ const marqueePhotos = [...galleryPhotos, ...galleryPhotos];
   hydrateGuest();
   initReveal();
   initMusicFab();
-  initGalleryDrag();
   initEventActions();
 </script>
