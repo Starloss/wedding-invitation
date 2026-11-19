@@ -1,8 +1,10 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 
-const adminUsername = import.meta.env.ADMIN_USERNAME || "admin";
-const adminPassword = import.meta.env.ADMIN_PASSWORD || "admin123";
+// Credenciales de la demo: se configuran con variables de entorno, sin valores por defecto en el código.
+const adminUsername = import.meta.env.ADMIN_USERNAME ?? "";
+const adminPassword = import.meta.env.ADMIN_PASSWORD ?? "";
+const credentialsConfigured = Boolean(adminUsername && adminPassword);
 ---
 
 <BaseLayout title="Panel de Anfitrión" skipPrivacyGate>
@@ -15,12 +17,21 @@ const adminPassword = import.meta.env.ADMIN_PASSWORD || "admin123";
     >
       <h1>Acceso administrativo</h1>
       <p>Ingresa usuario y clave para administrar invitaciones y contenido.</p>
-      <p class="login-credentials">
-        <strong>Usuario:</strong>
-        {adminUsername}<br />
-        <strong>Clave:</strong>
-        {adminPassword}
-      </p>
+      {
+        credentialsConfigured ? (
+          <p class="login-credentials">
+            <strong>Usuario:</strong>
+            {adminUsername}<br />
+            <strong>Clave:</strong>
+            {adminPassword}
+          </p>
+        ) : (
+          <p class="login-credentials">
+            Panel deshabilitado: configura <code>ADMIN_USERNAME</code> y{" "}
+            <code>ADMIN_PASSWORD</code>.
+          </p>
+        )
+      }
 
       <form id="login-form" class="login-form">
         <input
@@ -39,7 +50,7 @@ const adminPassword = import.meta.env.ADMIN_PASSWORD || "admin123";
           autocomplete="current-password"
           required
         />
-        <button type="submit">Entrar al panel</button>
+        <button type="submit" disabled={!credentialsConfigured}>Entrar al panel</button>
       </form>
 
       <p id="login-error" class="login-error" aria-live="polite"></p>
@@ -1034,8 +1045,8 @@ const adminPassword = import.meta.env.ADMIN_PASSWORD || "admin123";
   const SONG_PAGE_SIZE = 10;
 
   const loginSection = document.getElementById("admin-login") as HTMLElement;
-  const ADMIN_USERNAME = loginSection.dataset.adminUser || "admin";
-  const ADMIN_PASSWORD = loginSection.dataset.adminPass || "admin123";
+  const ADMIN_USERNAME = loginSection.dataset.adminUser ?? "";
+  const ADMIN_PASSWORD = loginSection.dataset.adminPass ?? "";
   const ADMIN_SESSION_KEY = "weddingAdminSession";
 
   const adminContent = document.getElementById("admin-content") as HTMLElement;
@@ -2080,7 +2091,7 @@ const adminPassword = import.meta.env.ADMIN_PASSWORD || "admin123";
     const user = loginUser.value.trim();
     const pass = loginPass.value;
 
-    if (user === ADMIN_USERNAME && pass === ADMIN_PASSWORD) {
+    if (ADMIN_USERNAME && ADMIN_PASSWORD && user === ADMIN_USERNAME && pass === ADMIN_PASSWORD) {
       sessionStorage.setItem(ADMIN_SESSION_KEY, "ok");
       loginError.textContent = "";
       showAdminContent();

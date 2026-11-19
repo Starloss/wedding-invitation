@@ -1,7 +1,7 @@
 {
   "name": "wedding-invitation-demo",
   "version": "1.0.0",
-  "description": "Demo de invitación de boda — sin Firebase ni datos personales",
+  "description": "Mobile-first wedding invitation demo with token-based RSVP, built with Astro",
   "type": "module",
   "scripts": {
     "dev": "astro dev",
@@ -11,7 +11,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "@astrojs/check": "^0.9.6",
     "astro": "^5.17.2",
