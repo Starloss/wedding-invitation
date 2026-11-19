@@ -9,7 +9,7 @@ import RSVP from "../components/RSVP.astro";
 
 // ── Demo data — no personal info ──────────────────────────────────────────────
 const eventTitle = "Boda Civil";
-const eventDateLabel = "Sábado 12 de Septiembre — 05:00 PM a 11:00 PM";
+const eventDateLabel = "Sábado 14 de Septiembre — 05:00 PM a 11:00 PM";
 const eventVenue = "Salón Jardín Las Magnolias";
 const eventAddress = "Urbanización Los Pinos, Calle Principal";
 const eventMapUrl = "https://maps.google.com";
@@ -20,8 +20,8 @@ const formatGcal = (d: Date) =>
     .replace(/[-:]/g, "")
     .replace(/\.\d{3}Z$/, "Z");
 
-const s = new Date("2026-09-12T17:00:00-04:00");
-const e = new Date("2026-09-12T23:00:00-04:00");
+const s = new Date("2030-09-14T17:00:00-04:00");
+const e = new Date("2030-09-14T23:00:00-04:00");
 const calDates = formatGcal(s) + "/" + formatGcal(e);
 const calDetails = eventDateLabel + ". Lugar: " + eventVenue + ".";
 const calLocation = eventVenue + ", " + eventAddress;
@@ -97,7 +97,7 @@ const marqueePhotos = [...galleryPhotos, ...galleryPhotos];
         <div class="hero-overlay">
           <div class="hero-date-row">
             <span class="hero-line" aria-hidden="true"></span>
-            <p class="hero-date">12.09.2026</p>
+            <p class="hero-date">14.09.2030</p>
             <span class="hero-line" aria-hidden="true"></span>
           </div>
           <h1 class="hero-names" aria-label="Sofía y Mateo">
